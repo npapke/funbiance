@@ -18,11 +18,12 @@ class AmbianceWindow:
         DBusGMainLoop(set_as_default=True)
         Gst.init(None)
 
-        self.loop = GLib.MainLoop()
-
         self.bus = dbus.SessionBus()
         self.request_iface = 'org.freedesktop.portal.Request'
         self.screen_cast_iface = 'org.freedesktop.portal.ScreenCast'
+
+        self.portal = self.bus.get_object('org.freedesktop.portal.Desktop',
+                                    '/org/freedesktop/portal/desktop')
 
         self.pipeline = None
 
@@ -30,25 +31,24 @@ class AmbianceWindow:
         self.session_token_counter = 0
         
     def run(self):
+        if self.pipeline is not None:
+            return
+        
         self.sender_name = re.sub(r'\.', r'_', self.bus.get_unique_name()[1:])
-
-        self.portal = self.bus.get_object('org.freedesktop.portal.Desktop',
-                                    '/org/freedesktop/portal/desktop')
 
         (self.session_path, self.session_token) = self.new_session_path()
 
         self.screen_cast_call(self.portal.CreateSession, self.on_create_session_response,
                         options={ 'session_handle_token': self.session_token })
 
-        try:
-            self.loop.run()
-        except KeyboardInterrupt:
-            self.terminate()
-
     def terminate(self):
         if self.pipeline is not None:
             self.pipeline.set_state(Gst.State.NULL)
-        self.loop.quit()
+            self.pipeline = None
+
+        # TODO Find a way to close the session.  The following does not work.
+        # if hasattr(self, 'session') and self.session:
+            # self.screen_cast_call(self.portal.Close, self.on_close_session_response)
 
     def new_request_path(self):
         self.request_token_counter = self.request_token_counter + 1
@@ -86,15 +86,28 @@ class AmbianceWindow:
         fd_object = self.portal.OpenPipeWireRemote(self.session, empty_dict,
                                             dbus_interface=self.screen_cast_iface)
         fd = fd_object.take()
-        blur = f'glupload ! gltransformation scale-x=0.02 scale-y=0.02 rotation-y=180 ! gleffects effect=blur hswap=1 ! glshader fragment="{shadercode}" ! gltransformation scale-x=50.0 scale-y=50.0 ! gldownload'
+        
+        scale_down = 1 / self._config.blur_factor if self._config.blur_factor != 0 else 1.0
+        scale_up = self._config.blur_factor if self._config.blur_factor != 0 else 1.0
+        
+        blur = (
+                'glupload ! '
+                f'gltransformation scale-x={scale_down} scale-y={scale_down} rotation-y=180 ! ' 
+                'gleffects effect=blur hswap=1 ! ' 
+                f'glshader fragment="{shadercode}" ! ' 
+                f'gltransformation scale-x={scale_up} scale-y={scale_up} ! ' 
+                'gldownload'
+            )
         vc= 'videoconvert'
         #capture=f'pipewiresrc fd={fd} path={node_id} ! {vc} ! videorate ! video/x-raw,framerate=10/1'
         capture=f'pipewiresrc fd={fd} path={node_id} ! {vc} '
         display=f'{vc} ! xvimagesink force-aspect-ratio=false'
-        pipecmd = f'''{capture} ! {blur} ! {vc} ! tee name=m
-        m. ! queue ! {display}
-        m. ! queue ! {display}
-        '''
+        pipecmd = (
+                f'{capture} ! ' 
+                f'{blur} ! ' 
+                f'{vc} ! ' 
+                'tee name=m'
+            ) + f'\nm. ! queue ! {display}' * self._config.num_windows
         self.pipeline = Gst.parse_launch(pipecmd)
         self.pipeline.set_state(Gst.State.PLAYING)
         self.pipeline.get_bus().connect('message', self.on_gst_message)
@@ -133,3 +146,7 @@ class AmbianceWindow:
                         self.session,
                         options={ 'multiple': False,
                                 'types': dbus.UInt32(1|2) })
+        
+    def on_close_session_response(self, response):
+        if response != 0:
+            print("Failed to close session %s"%self.session)
