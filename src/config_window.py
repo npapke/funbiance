@@ -4,9 +4,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator
 
 class ConfigWindow(QWidget):
-    def __init__(self, config_values):
+    def __init__(self, config_values, ambiance_window):
         super().__init__()
         self.config_values = config_values
+        self.ambiance_window = ambiance_window
         self.initUI()
 
     def initUI(self):
@@ -72,7 +73,12 @@ class ConfigWindow(QWidget):
         buttonBox.addWidget(saveButton)
 
         runButton = QPushButton('Run')
+        runButton.clicked.connect(self.onRunClicked)
         buttonBox.addWidget(runButton)
+
+        stopButton = QPushButton('Stop')
+        stopButton.clicked.connect(self.onStopClicked)
+        buttonBox.addWidget(stopButton)
 
         self.show()
 
@@ -106,3 +112,9 @@ class ConfigWindow(QWidget):
 
     def onSaveClicked(self):
         self.config_values.save()
+
+    def onRunClicked(self):
+        self.ambiance_window.run()
+
+    def onStopClicked(self):
+        self.ambiance_window.terminate()
