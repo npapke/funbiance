@@ -8,6 +8,7 @@ class ConfigValues:
     def __init__(self):
         self._blur_factor_value = 50
         self._num_windows_value = 3
+        self._brightness_value = 50  # Add default brightness value
 
         # Get the appropriate XDG directory for storing user data
         dir_path = user_data_dir("Funbiance", roaming=True)
@@ -49,13 +50,30 @@ class ConfigValues:
 
         self._num_windows_value = value
 
+    @property
+    def brightness(self):
+        return self._brightness_value
+
+    @brightness.setter
+    def brightness(self, value):
+        if not isinstance(value, int):
+            raise TypeError("Brightness must be an integer")
+        elif not 0 <= value <= 100:
+            raise ValueError("Brightness out of range (0-100)")
+
+        self._brightness_value = value
+
     def save(self):
         """
         Saves the current configuration to a JSON file.
         """
+        data = {
+            'blur_factor': self._blur_factor_value,
+            'num_windows': self._num_windows_value,
+            'brightness': self._brightness_value  # Add brightness to saved data
+        }
         with open(self._filename, "w") as json_file:
-            json.dump({"blur_factor": self._blur_factor_value, "num_windows": self._num_windows_value}, json_file)
-
+            json.dump(data, json_file)
     def load(self):
         """
         Loads the previously saved configuration from a JSON file.
@@ -64,3 +82,4 @@ class ConfigValues:
             data = json.load(json_file)
         self._blur_factor_value = data['blur_factor']
         self._num_windows_value = data['num_windows']
+        self._brightness_value = data.get('brightness', 50)  # Load with default fallback

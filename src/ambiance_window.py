@@ -94,7 +94,7 @@ class AmbianceWindow:
                 'glupload ! '
                 f'gltransformation scale-x={scale_down} scale-y={scale_down} rotation-y=180 ! ' 
                 'gleffects effect=blur hswap=1 ! ' 
-                f'glshader fragment="{shadercode}" ! ' 
+                f'glshader fragment="{self.shader_code()}" ! ' 
                 f'gltransformation scale-x={scale_up} scale-y={scale_up} ! ' 
                 'gldownload'
             )
@@ -150,3 +150,22 @@ class AmbianceWindow:
     def on_close_session_response(self, response):
         if response != 0:
             print("Failed to close session %s"%self.session)
+            
+            
+    def shader_code(self):
+        brightness = self._config.brightness / 100
+        return f"""
+#version 100
+#ifdef GL_ES
+precision mediump float;
+#endif
+varying vec2 v_texcoord;
+uniform sampler2D tex;
+uniform float time;
+uniform float width;
+uniform float height;
+
+void main () {{
+	gl_FragColor = texture2D( tex, v_texcoord ) * vec4({brightness}, {brightness}, {brightness}, {brightness});
+}}
+    """

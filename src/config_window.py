@@ -38,6 +38,22 @@ class ConfigWindow(QWidget):
         self.blurFactorText.setText(str(self.config_values.blur_factor))
         blurControlLayout.addWidget(self.blurFactorText)
 
+        # Brightness Controls
+        brightnessLabel = QLabel('Brightness:')
+        layout.addWidget(brightnessLabel)
+        
+        self.brightnessSlider = QSlider(Qt.Horizontal)
+        self.brightnessSlider.setMinimum(0)
+        self.brightnessSlider.setMaximum(100)
+        self.brightnessSlider.setValue(self.config_values.brightness)
+        self.brightnessText = QLineEdit(str(self.config_values.brightness))
+        self.brightnessText.setFixedWidth(50)
+
+        brightnessLayout = QHBoxLayout()
+        brightnessLayout.addWidget(self.brightnessSlider)
+        brightnessLayout.addWidget(self.brightnessText)
+        layout.addLayout(brightnessLayout)
+
         # Number of Windows Controls
         numWindowsLabel = QLabel('Number of Windows (0-6)')
         layout.addWidget(numWindowsLabel)
@@ -58,11 +74,14 @@ class ConfigWindow(QWidget):
         self.numWindowsText.setMaximumWidth(50)
         self.numWindowsText.setText(str(self.config_values.num_windows))
         numWindowsControlLayout.addWidget(self.numWindowsText)
+
         # Connect signals
         self.blurFactorSlider.valueChanged.connect(self.onBlurFactorSliderChanged)
         self.blurFactorText.editingFinished.connect(self.onBlurFactorTextChanged)
         self.numWindowsSlider.valueChanged.connect(self.onNumWindowsSliderChanged)
         self.numWindowsText.editingFinished.connect(self.onNumWindowsTextChanged)
+        self.brightnessSlider.valueChanged.connect(self.onBrightnessSliderChanged)
+        self.brightnessText.textChanged.connect(self.onBrightnessTextChanged)
 
         # Buttons
         buttonBox = QHBoxLayout()
@@ -110,6 +129,19 @@ class ConfigWindow(QWidget):
             # Restore the text to match the slider if invalid input
             self.numWindowsText.setText(str(self.numWindowsSlider.value()))
 
+    def onBrightnessSliderChanged(self, value):
+        self.brightnessText.setText(str(value))
+        self.config_values.brightness = value
+
+    def onBrightnessTextChanged(self):
+        try:
+            value = int(self.brightnessText.text())
+            if 0 <= value <= 100:
+                self.brightnessSlider.setValue(value)
+                self.config_values.brightness = value
+        except ValueError:
+            # Restore the text to match the slider if invalid input
+            self.brightnessText.setText(str(self.brightnessSlider.value()))
     def onSaveClicked(self):
         self.config_values.save()
 
