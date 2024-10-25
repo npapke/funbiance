@@ -4,6 +4,9 @@ import signal
 import dbus
 from gi.repository import GLib
 from dbus.mainloop.glib import DBusGMainLoop
+import numpy as np
+from PySide6.QtGui import QImage
+
 
 from config_values import ConfigValues
 
@@ -11,7 +14,7 @@ import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import GObject, Gst
 
-class AmbianceWindow:
+class CapturePipeline:
     def __init__(self, config_values):
         self._config = config_values
 
@@ -21,6 +24,7 @@ class AmbianceWindow:
         self.bus = dbus.SessionBus()
         self.request_iface = 'org.freedesktop.portal.Request'
         self.screen_cast_iface = 'org.freedesktop.portal.ScreenCast'
+        self.session_iface = 'org.freedesktop.portal.Session'
 
         self.portal = self.bus.get_object('org.freedesktop.portal.Desktop',
                                     '/org/freedesktop/portal/desktop')
@@ -48,6 +52,7 @@ class AmbianceWindow:
 
         # TODO Find a way to close the session.  The following does not work.
         # if hasattr(self, 'session') and self.session:
+            # self.portal.Close(dbus_interface=self.session_iface)
             # self.screen_cast_call(self.portal.Close, self.on_close_session_response)
 
     def new_request_path(self):
@@ -79,9 +84,6 @@ class AmbianceWindow:
             self.terminate()
 
     def play_pipewire_stream(self, node_id):
-        with open('myshader.frag', 'r') as shaderfile:
-            shadercode = shaderfile.read()
-
         empty_dict = dbus.Dictionary(signature="sv")
         fd_object = self.portal.OpenPipeWireRemote(self.session, empty_dict,
                                             dbus_interface=self.screen_cast_iface)
@@ -107,11 +109,48 @@ class AmbianceWindow:
                 f'{blur} ! ' 
                 f'{vc} ! ' 
                 'tee name=m'
+                '\nm. ! queue ! videorate ! video/x-raw,format=RGB,framerate=10/1 ! appsink name=frame_sink emit-signals=True sync=False'
             ) + f'\nm. ! queue ! {display}' * self._config.num_windows
         self.pipeline = Gst.parse_launch(pipecmd)
+        appsink = self.pipeline.get_by_name('frame_sink')
+        appsink.connect("new-sample", self.on_buffer, None)
         self.pipeline.set_state(Gst.State.PLAYING)
         self.pipeline.get_bus().connect('message', self.on_gst_message)
-
+        
+    def on_buffer(self, sink, data):
+        sample = sink.emit("pull-sample")
+        if sample:
+            buffer = sample.get_buffer()
+            caps = sample.get_caps()
+            
+            # Get buffer dimensions
+            width = caps.get_structure(0).get_value('width')
+            height = caps.get_structure(0).get_value('height')
+            
+            # Create numpy array from buffer data
+            buffer_data = buffer.extract_dup(0, buffer.get_size())
+            numpy_frame = np.ndarray(
+                (height, width, 3),
+                buffer=buffer_data,
+                dtype=np.uint8
+            )
+            
+            # Convert numpy array to QImage
+            height, width, channels = numpy_frame.shape
+            bytes_per_line = channels * width
+            qimage = QImage(
+                numpy_frame.data,
+                width,
+                height, 
+                bytes_per_line,
+                QImage.Format_RGB888
+            )
+            
+            return Gst.FlowReturn.OK
+        
+        return Gst.FlowReturn.ERROR
+    
+    
     def on_start_response(self, response, results):
         if response != 0:
             print("Failed to start: %s"%response)

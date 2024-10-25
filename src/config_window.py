@@ -142,6 +142,7 @@ class ConfigWindow(QWidget):
         except ValueError:
             # Restore the text to match the slider if invalid input
             self.brightnessText.setText(str(self.brightnessSlider.value()))
+            
     def onSaveClicked(self):
         self.config_values.save()
 

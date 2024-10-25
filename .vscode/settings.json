@@ -4,5 +4,15 @@
     ],
     "python.analysis.autoImportCompletions": true,
     "vim.overrideCopy": false,
-    "vim.useCtrlKeys": false
+    "vim.useCtrlKeys": true,
+    "vim.handleKeys": {
+
+        "<C-.>": false,
+        "<C-c>": false,
+        "<C-i>": false,
+        "<C-l>": false,
+        "<C-d>": false,
+        "<C-s>": false,
+        "<C-z>": false
+    }
 }
