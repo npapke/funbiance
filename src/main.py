@@ -1,15 +1,18 @@
 import sys
-from ambiance_window import AmbianceWindow
+from ambiance import Ambiance
 from config_values import ConfigValues
 from config_window import ConfigWindow
 from PySide6 import QtCore, QtWidgets, QtGui
 
 
 def main():
-    app = QtWidgets.QApplication([]) 
+    app = QtWidgets.QApplication([b'Funbiance']) 
     config_values = ConfigValues()
-    ambiance_window = AmbianceWindow(config_values)
-    config_window = ConfigWindow(config_values, ambiance_window)
+    config_window = ConfigWindow(config_values)
+    ambiance = Ambiance(config_values)
+    config_window.start.connect(ambiance.on_start)
+    config_window.stop.connect(ambiance.on_stop)
+    
     sys.exit(app.exec())
 
 if __name__ == "__main__":
