@@ -39,6 +39,8 @@ class AmbianceWindow(QOpenGLWindow):
             
         try:
             painter = QPainter(self)
+            painter.setRenderHints(QPainter.RenderHint.SmoothPixmapTransform | QPainter.RenderHint.Antialiasing)
+
             try:
                 # Work around reference counting issue with signal / slot mechanism
                 pixmap = self._pixmap if not self._capture else self._capture._pixmap

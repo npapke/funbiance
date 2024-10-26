@@ -2,12 +2,12 @@
 import re
 import signal
 import dbus
-from gi.repository import GLib
+import math
 from dbus.mainloop.glib import DBusGMainLoop
 import numpy as np
 from PySide6.QtCore import QObject, Signal, QThread
 from PySide6.QtGui import QImage, QPixmap
-from copy import deepcopy
+import cv2
 
 
 from config_values import ConfigValues
@@ -99,28 +99,13 @@ class CapturePipeline(QObject):
                                             dbus_interface=self.screen_cast_iface)
         fd = fd_object.take()
         
-        scale_down = (1 - 100.0 / self._config.blur_factor) if self._config.blur_factor != 0 else 1.0
-        scale_up = self._config.blur_factor if self._config.blur_factor != 0 else 1.0
-        
-        blur = (
-                'glupload ! '
-                f'gltransformation scale-x={scale_down} scale-y={scale_down} rotation-y=180 ! ' 
-                'gleffects effect=blur hswap=1 ! ' 
-                f'glshader fragment="{self.shader_code()}" ! ' 
-                # f'gltransformation scale-x={scale_up} scale-y={scale_up} ! ' 
-                'gldownload'
-            )
-        vc= 'videoconvert'
-        #capture=f'pipewiresrc fd={fd} path={node_id} ! {vc} ! videorate ! video/x-raw,framerate=10/1'
-        capture=f'pipewiresrc fd={fd} path={node_id} ! {vc} '
-        display=f'{vc} ! xvimagesink force-aspect-ratio=false'
         pipecmd = (
-                f'{capture} ! ' 
-                # f'{blur} ! ' 
-                f'{vc} ! ' 
+                f'pipewiresrc fd={fd} path={node_id} ! '
+                'videoconvert ! ' 
                 'video/x-raw,format=RGB ! ' 
                 'appsink name=frame_sink emit-signals=True sync=False'
             )
+        # display=f'{vc} ! xvimagesink force-aspect-ratio=false'
         self.pipeline = Gst.parse_launch(pipecmd)
         appsink = self.pipeline.get_by_name('frame_sink')
         appsink.connect("new-sample", self.on_buffer, None)
@@ -154,6 +139,16 @@ class CapturePipeline(QObject):
                 self.color_sample.emit(r, g, b)
                 # print(f"r={r} g={g} b={b}")
                 
+                # Once we have the mean color, let's perform some transformations.
+                scale_down = (1.0 - math.log(self._config.blur_factor + 1, 100)) if self._config.blur_factor < 99 else 0.001
+                width = int(width * scale_down)
+                height = int(height * scale_down)
+
+                numpy_frame = cv2.resize(numpy_frame, (width, height), interpolation = cv2.INTER_AREA)
+                numpy_frame = np.clip(numpy_frame * (self._config.brightness / 100.0), 0, 255).astype(np.uint8)
+                numpy_frame = cv2.GaussianBlur(numpy_frame, (15, 15), 8)
+                numpy_frame = cv2.flip(numpy_frame, 1)
+                
                 # Convert numpy array to QImage
                 height, width, channels = numpy_frame.shape
                 bytes_per_line = channels * width
@@ -171,7 +166,7 @@ class CapturePipeline(QObject):
                 # When received, the backing buffer of the pixmap has been released.  There
                 # is some sort of reference counting issue in the mechanism.  Tried to make
                 # copies of the numpy array, the QImage to no avail.
-                # Code now just just retrieves the pixmap when the signal is received.  Too
+                # Code now just retrieves the pixmap when the signal is received.  Too
                 # bad about keeping dependencies clean.
                 self.frame_sample.emit(self._pixmap)
                 
