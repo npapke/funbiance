@@ -6,9 +6,10 @@ from PySide6.QtOpenGL import QOpenGLFramebufferObject, QOpenGLWindow
 
 class AmbianceWindow(QOpenGLWindow):
 
-    def __init__(self, screen, **kwd):
+    def __init__(self, screen, *, capture=None, **kwd):
         super().__init__(**kwd)
-        self.pixmap = None
+        self._pixmap = None
+        self._capture = capture
         
         self.setScreen(screen)
         
@@ -31,11 +32,7 @@ class AmbianceWindow(QOpenGLWindow):
 
     @Slot(QPixmap)
     def set_pixmap(self, pixmap):
-        print(f"Received pixmap in thread: {QThread.currentThread().objectName()}")
-        print(f"Pixmap valid: {not pixmap.isNull() if pixmap else False}")       
-        self.pixmap = pixmap
-        if not self.pixmap:
-            print("no pixmap")
+        self._pixmap = pixmap
         self.paintGL()
         
     def paintGL(self):
@@ -43,11 +40,14 @@ class AmbianceWindow(QOpenGLWindow):
         try:
             painter = QPainter(self)
             try:
-                if self.pixmap:
-                    painter.drawPixmap(0, 0, self.width(), self.height(), self.pixmap)
+                # Work around reference counting issue with signal / slot mechanism
+                pixmap = self._pixmap if not self._capture else self._capture._pixmap
+                if pixmap:
+                    painter.drawPixmap(0, 0, self.width(), self.height(), pixmap)
                 else:
                     painter.fillRect(0, 0, self.width(), self.height(), QColor.fromRgb(self.color_count, self.color_count, self.color_count))
-                    self.color_count = (self.color_count + 1) % 255
+                    self.color_count = (self.color_count + 1) % 255  # animate for debug
+                
                 self.requestUpdate()
             finally:
                 painter.end()

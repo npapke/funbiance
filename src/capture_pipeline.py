@@ -157,7 +157,6 @@ class CapturePipeline(QObject):
                 # Convert numpy array to QImage
                 height, width, channels = numpy_frame.shape
                 bytes_per_line = channels * width
-                numpy_frame = deepcopy(numpy_frame)
                 qimage = QImage(
                     numpy_frame.data,
                     width,
@@ -166,11 +165,15 @@ class CapturePipeline(QObject):
                     QImage.Format_RGB888
                 )
                 
-                self._pixmap = QPixmap.fromImage(qimage.copy())
-                if self._pixmap:
-                    print(f"Created pixmap in thread: {QThread.currentThread().objectName()}")
-                    print(f"pixmap {self._pixmap.size()}")
-                    self.frame_sample.emit(self._pixmap)
+                self._pixmap = QPixmap.fromImage(qimage)
+                
+                # Very frustrating.  Sending the pixmap via the signal/slot does not work.
+                # When received, the backing buffer of the pixmap has been released.  There
+                # is some sort of reference counting issue in the mechanism.  Tried to make
+                # copies of the numpy array, the QImage to no avail.
+                # Code now just just retrieves the pixmap when the signal is received.  Too
+                # bad about keeping dependencies clean.
+                self.frame_sample.emit(self._pixmap)
                 
                 return Gst.FlowReturn.OK
         except Exception as e:
