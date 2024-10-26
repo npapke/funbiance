@@ -5,7 +5,9 @@ import dbus
 from gi.repository import GLib
 from dbus.mainloop.glib import DBusGMainLoop
 import numpy as np
-from PySide6.QtGui import QImage
+from PySide6.QtCore import QObject, Signal, QThread
+from PySide6.QtGui import QImage, QPixmap
+from copy import deepcopy
 
 
 from config_values import ConfigValues
@@ -14,8 +16,13 @@ import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import GObject, Gst
 
-class CapturePipeline:
+class CapturePipeline(QObject):
+    
+    color_sample = Signal(int, int, int)        # RGB
+    frame_sample = Signal(QImage)
+    
     def __init__(self, config_values):
+        super().__init__()
         self._config = config_values
 
         DBusGMainLoop(set_as_default=True)
@@ -33,6 +40,9 @@ class CapturePipeline:
 
         self.request_token_counter = 0
         self.session_token_counter = 0
+        
+        self._pixmap = None
+        
         
     def run(self):
         if self.pipeline is not None:
@@ -89,7 +99,7 @@ class CapturePipeline:
                                             dbus_interface=self.screen_cast_iface)
         fd = fd_object.take()
         
-        scale_down = 1 / self._config.blur_factor if self._config.blur_factor != 0 else 1.0
+        scale_down = (1 - 100.0 / self._config.blur_factor) if self._config.blur_factor != 0 else 1.0
         scale_up = self._config.blur_factor if self._config.blur_factor != 0 else 1.0
         
         blur = (
@@ -97,7 +107,7 @@ class CapturePipeline:
                 f'gltransformation scale-x={scale_down} scale-y={scale_down} rotation-y=180 ! ' 
                 'gleffects effect=blur hswap=1 ! ' 
                 f'glshader fragment="{self.shader_code()}" ! ' 
-                f'gltransformation scale-x={scale_up} scale-y={scale_up} ! ' 
+                # f'gltransformation scale-x={scale_up} scale-y={scale_up} ! ' 
                 'gldownload'
             )
         vc= 'videoconvert'
@@ -106,50 +116,67 @@ class CapturePipeline:
         display=f'{vc} ! xvimagesink force-aspect-ratio=false'
         pipecmd = (
                 f'{capture} ! ' 
-                f'{blur} ! ' 
+                # f'{blur} ! ' 
                 f'{vc} ! ' 
-                'tee name=m'
-                '\nm. ! queue ! videorate ! video/x-raw,format=RGB,framerate=10/1 ! appsink name=frame_sink emit-signals=True sync=False'
-            ) + f'\nm. ! queue ! {display}' * self._config.num_windows
+                'video/x-raw,format=RGB ! ' 
+                'appsink name=frame_sink emit-signals=True sync=False'
+            )
         self.pipeline = Gst.parse_launch(pipecmd)
         appsink = self.pipeline.get_by_name('frame_sink')
         appsink.connect("new-sample", self.on_buffer, None)
         self.pipeline.set_state(Gst.State.PLAYING)
         self.pipeline.get_bus().connect('message', self.on_gst_message)
         
+        
     def on_buffer(self, sink, data):
         sample = sink.emit("pull-sample")
-        if sample:
-            buffer = sample.get_buffer()
-            caps = sample.get_caps()
-            
-            # Get buffer dimensions
-            width = caps.get_structure(0).get_value('width')
-            height = caps.get_structure(0).get_value('height')
-            
-            # Create numpy array from buffer data
-            buffer_data = buffer.extract_dup(0, buffer.get_size())
-            numpy_frame = np.ndarray(
-                (height, width, 3),
-                buffer=buffer_data,
-                dtype=np.uint8
-            )
-            
-            # Convert numpy array to QImage
-            height, width, channels = numpy_frame.shape
-            bytes_per_line = channels * width
-            qimage = QImage(
-                numpy_frame.data,
-                width,
-                height, 
-                bytes_per_line,
-                QImage.Format_RGB888
-            )
-            
-            return Gst.FlowReturn.OK
+        try:
+            if sample:
+                buffer = sample.get_buffer()
+                caps = sample.get_caps()
+                
+                # Get buffer dimensions
+                width = caps.get_structure(0).get_value('width')
+                height = caps.get_structure(0).get_value('height')
+                
+                # Create numpy array from buffer data
+                buffer_data = buffer.extract_dup(0, buffer.get_size())
+                numpy_frame = np.ndarray(
+                    (height, width, 3),
+                    buffer=buffer_data,
+                    dtype=np.uint8
+                )
+                
+                # Calculate average RGB values across all pixels
+                r = int(np.mean(numpy_frame[:,:,0]))
+                g = int(np.mean(numpy_frame[:,:,1])) 
+                b = int(np.mean(numpy_frame[:,:,2]))
+                self.color_sample.emit(r, g, b)
+                # print(f"r={r} g={g} b={b}")
+                
+                # Convert numpy array to QImage
+                height, width, channels = numpy_frame.shape
+                bytes_per_line = channels * width
+                numpy_frame = deepcopy(numpy_frame)
+                qimage = QImage(
+                    numpy_frame.data,
+                    width,
+                    height, 
+                    bytes_per_line,
+                    QImage.Format_RGB888
+                )
+                
+                self._pixmap = QPixmap.fromImage(qimage.copy())
+                if self._pixmap:
+                    print(f"Created pixmap in thread: {QThread.currentThread().objectName()}")
+                    print(f"pixmap {self._pixmap.size()}")
+                    self.frame_sample.emit(self._pixmap)
+                
+                return Gst.FlowReturn.OK
+        except Exception as e:
+            print(f"capture_pipeline: exception {e}")
         
         return Gst.FlowReturn.ERROR
-    
     
     def on_start_response(self, response, results):
         if response != 0:

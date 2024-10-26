@@ -1,13 +1,16 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QSlider, QLabel, 
                               QHBoxLayout, QPushButton, QLineEdit)
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIntValidator
 
 class ConfigWindow(QWidget):
-    def __init__(self, config_values, ambiance_window):
+    
+    start = Signal()
+    stop = Signal()
+    
+    def __init__(self, config_values):
         super().__init__()
         self.config_values = config_values
-        self.ambiance_window = ambiance_window
         self.initUI()
 
     def initUI(self):
@@ -147,7 +150,7 @@ class ConfigWindow(QWidget):
         self.config_values.save()
 
     def onRunClicked(self):
-        self.ambiance_window.run()
+        self.start.emit()
 
     def onStopClicked(self):
-        self.ambiance_window.terminate()
+        self.stop.emit()
