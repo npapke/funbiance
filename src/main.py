@@ -10,8 +10,8 @@ def main():
     config_values = ConfigValues()
     config_window = ConfigWindow(config_values)
     ambiance = Ambiance(config_values)
-    config_window.start.connect(ambiance.start)
-    config_window.stop.connect(ambiance.stop)
+    config_window.start.connect(ambiance.on_start)
+    config_window.stop.connect(ambiance.on_stop)
     
     sys.exit(app.exec())
 

@@ -12,30 +12,34 @@ class Ambiance(QObject):
         self.windows = []
         
     @Slot()
-    def start(self):
+    def on_start(self):
         if self.capture is None:
             self.capture = CapturePipeline(self._config)
-
-            app = QApplication.instance()
-            for screen in app.screens():
-                if screen != app.primaryScreen():
-                    print(f"Avail Geometry: {screen.availableGeometry()}")
-                    w = AmbianceWindow(screen)
-                    self.capture.frame_sample.connect(w.set_pixmap, Qt.ConnectionType.QueuedConnection)
-                    self.windows.append(w)
-                    
-                    break
-                    
+            self.capture.pipeline_active.connect(self.on_capture_active)
             self.capture.run()
- 
+
+            
     @Slot()
-    def stop(self):
+    def on_capture_active(self):
+        app = QApplication.instance()
+        for screen in app.screens():
+            if screen != app.primaryScreen():
+                print(f"Avail Geometry: {screen.availableGeometry()}")
+                w = AmbianceWindow(screen)
+                self.capture.frame_sample.connect(w.on_next_pixmap, Qt.ConnectionType.QueuedConnection)
+                self.windows.append(w)
+                
+                break # TODO remove
+                
+    @Slot()
+    def on_stop(self):
         if self.capture is not None:
-            self.capture.terminate()
-            self.capture = None
             
             for w in self.windows:
                 w.close()
                 del w
             self.windows = []
-    
+            
+            self.capture.terminate()
+            del self.capture
+            self.capture = None

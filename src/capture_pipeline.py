@@ -20,6 +20,7 @@ class CapturePipeline(QObject):
     
     color_sample = Signal(int, int, int)        # RGB
     frame_sample = Signal(QPixmap)
+    pipeline_active = Signal()
     
     def __init__(self, config_values):
         super().__init__()
@@ -111,6 +112,8 @@ class CapturePipeline(QObject):
         appsink.connect("new-sample", self.on_buffer, None)
         self.pipeline.set_state(Gst.State.PLAYING)
         self.pipeline.get_bus().connect('message', self.on_gst_message)
+        
+        self.pipeline_active.emit()
         
         
     def on_buffer(self, sink, data):

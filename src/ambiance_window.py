@@ -31,7 +31,7 @@ class AmbianceWindow(QOpenGLWindow):
         self.color_count = 0
 
     @Slot(QPixmap)
-    def set_pixmap(self, pixmap):
+    def on_next_pixmap(self, pixmap):
         self._pixmap = pixmap
         self.paintGL()
         
