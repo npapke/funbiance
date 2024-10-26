@@ -19,7 +19,7 @@ from gi.repository import GObject, Gst
 class CapturePipeline(QObject):
     
     color_sample = Signal(int, int, int)        # RGB
-    frame_sample = Signal(QImage)
+    frame_sample = Signal(QPixmap)
     
     def __init__(self, config_values):
         super().__init__()
@@ -161,13 +161,6 @@ class CapturePipeline(QObject):
                 )
                 
                 self._pixmap = QPixmap.fromImage(qimage)
-                
-                # Very frustrating.  Sending the pixmap via the signal/slot does not work.
-                # When received, the backing buffer of the pixmap has been released.  There
-                # is some sort of reference counting issue in the mechanism.  Tried to make
-                # copies of the numpy array, the QImage to no avail.
-                # Code now just retrieves the pixmap when the signal is received.  Too
-                # bad about keeping dependencies clean.
                 self.frame_sample.emit(self._pixmap)
                 
                 return Gst.FlowReturn.OK

@@ -20,7 +20,7 @@ class Ambiance(QObject):
             for screen in app.screens():
                 if screen != app.primaryScreen():
                     print(f"Avail Geometry: {screen.availableGeometry()}")
-                    w = AmbianceWindow(screen, capture=self.capture)
+                    w = AmbianceWindow(screen)
                     self.capture.frame_sample.connect(w.set_pixmap, Qt.ConnectionType.QueuedConnection)
                     self.windows.append(w)
                     
