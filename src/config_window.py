@@ -77,7 +77,53 @@ class ConfigWindow(QWidget):
         self.numWindowsText.setMaximumWidth(50)
         self.numWindowsText.setText(str(self.config_values.num_windows))
         numWindowsControlLayout.addWidget(self.numWindowsText)
+        
+        # Bridge Address
+        bridgeAddressLayout = QHBoxLayout()
+        bridgeAddressLabel = QLabel("Hue Bridge Address")
+        layout.addWidget(bridgeAddressLabel)
+        self.bridgeAddressText = QLineEdit()
+        self.bridgeAddressText.setText(str(self.config_values.hue_bridge_address))
+        bridgeAddressLayout.addWidget(self.bridgeAddressText)
+        layout.addLayout(bridgeAddressLayout)
 
+        # Bridge Username
+        bridgeUsernameLayout = QHBoxLayout()
+        bridgeUsernameLabel = QLabel("Hue Bridge Username")
+        layout.addWidget(bridgeUsernameLabel)
+        self.bridgeUsernameText = QLineEdit()
+        self.bridgeUsernameText.setText(str(self.config_values.hue_bridge_username))
+        bridgeUsernameLayout.addWidget(self.bridgeUsernameText)
+        layout.addLayout(bridgeUsernameLayout)
+
+        # Hue Min Brightness
+        hueMinBrightnessLayout = QHBoxLayout()
+        hueMinBrightnessLabel = QLabel("Hue Min Brightness")
+        layout.addWidget(hueMinBrightnessLabel)
+        self.hueMinBrightnessSlider = QSlider(Qt.Horizontal)
+        self.hueMinBrightnessSlider.setMinimum(1)
+        self.hueMinBrightnessSlider.setMaximum(254)
+        self.hueMinBrightnessSlider.setValue(self.config_values.hue_min_brightness)
+        self.hueMinBrightnessText = QLineEdit()
+        self.hueMinBrightnessText.setText(str(self.config_values.hue_min_brightness))
+        hueMinBrightnessLayout.addWidget(self.hueMinBrightnessSlider)
+        hueMinBrightnessLayout.addWidget(self.hueMinBrightnessText)
+        layout.addLayout(hueMinBrightnessLayout)
+
+        # Hue Max Brightness
+        hueMaxBrightnessLayout = QHBoxLayout()
+        hueMaxBrightnessLabel = QLabel("Hue Max Brightness")
+        layout.addWidget(hueMaxBrightnessLabel)
+        self.hueMaxBrightnessSlider = QSlider(Qt.Horizontal)
+        self.hueMaxBrightnessSlider.setMinimum(1)
+        self.hueMaxBrightnessSlider.setMaximum(254)
+        self.hueMaxBrightnessSlider.setValue(self.config_values.hue_max_brightness)
+        self.hueMaxBrightnessText = QLineEdit()
+        self.hueMaxBrightnessText.setText(str(self.config_values.hue_max_brightness))
+        hueMaxBrightnessLayout.addWidget(self.hueMaxBrightnessSlider)
+        hueMaxBrightnessLayout.addWidget(self.hueMaxBrightnessText)
+        layout.addLayout(hueMaxBrightnessLayout)
+  
         # Connect signals
         self.blurFactorSlider.valueChanged.connect(self.onBlurFactorSliderChanged)
         self.blurFactorText.editingFinished.connect(self.onBlurFactorTextChanged)
@@ -85,6 +131,12 @@ class ConfigWindow(QWidget):
         self.numWindowsText.editingFinished.connect(self.onNumWindowsTextChanged)
         self.brightnessSlider.valueChanged.connect(self.onBrightnessSliderChanged)
         self.brightnessText.textChanged.connect(self.onBrightnessTextChanged)
+        self.bridgeAddressText.textChanged.connect(self.onHueBridgeAddressChanged)
+        self.bridgeUsernameText.textChanged.connect(self.onHueBridgeUsernameChanged)
+        self.hueMinBrightnessSlider.valueChanged.connect(self.onHueMinBrightnessSliderChanged)
+        self.hueMinBrightnessText.textChanged.connect(self.onHueMinBrightnessTextChanged)
+        self.hueMaxBrightnessSlider.valueChanged.connect(self.onHueMaxBrightnessSliderChanged)
+        self.hueMaxBrightnessText.textChanged.connect(self.onHueMaxBrightnessTextChanged)
 
         # Buttons
         buttonBox = QHBoxLayout()
@@ -145,6 +197,38 @@ class ConfigWindow(QWidget):
         except ValueError:
             # Restore the text to match the slider if invalid input
             self.brightnessText.setText(str(self.brightnessSlider.value()))
+            
+    def onHueBridgeAddressChanged(self):
+        self.config_values.bridge_address = self.bridgeAddressText.text()
+
+    def onHueBridgeUsernameChanged(self):
+        self.config_values.bridge_username = self.bridgeUsernameText.text()
+
+    def onHueMinBrightnessSliderChanged(self, value):
+        self.hueMinBrightnessText.setText(str(value))
+        self.config_values.hue_min_brightness = value
+
+    def onHueMinBrightnessTextChanged(self):
+        try:
+            value = int(self.hueMinBrightnessText.text())
+            if 1 <= value <= 254:
+                self.hueMinBrightnessSlider.setValue(value)
+                self.config_values.hue_min_brightness = value
+        except ValueError:
+            pass
+
+    def onHueMaxBrightnessSliderChanged(self, value):
+        self.hueMaxBrightnessText.setText(str(value))
+        self.config_values.hue_max_brightness = value
+
+    def onHueMaxBrightnessTextChanged(self):
+        try:
+            value = int(self.hueMaxBrightnessText.text())
+            if 1 <= value <= 254:
+                self.hueMaxBrightnessSlider.setValue(value)
+                self.config_values.hue_max_brightness = value
+        except ValueError:
+            pass
             
     def onSaveClicked(self):
         self.config_values.save()
