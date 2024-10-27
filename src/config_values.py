@@ -9,6 +9,10 @@ class ConfigValues:
         self._blur_factor_value = 50
         self._num_windows_value = 3
         self._brightness_value = 50  # Add default brightness value
+        self._hue_bridge_address_value = ''
+        self._hue_bridge_username_value = ''
+        self._hue_min_brightness_value = 1
+        self._hue_max_brightness_value = 254
 
         # Get the appropriate XDG directory for storing user data
         dir_path = user_data_dir("Funbiance", roaming=True)
@@ -63,6 +67,38 @@ class ConfigValues:
 
         self._brightness_value = value
 
+    @property
+    def hue_bridge_address(self):
+        return self._hue_bridge_address_value
+
+    @hue_bridge_address.setter
+    def hue_bridge_address(self, value):
+        self._hue_bridge_address_value = value
+
+    @property
+    def hue_bridge_username(self):
+        return self._hue_bridge_username_value
+
+    @hue_bridge_username.setter
+    def hue_bridge_username(self, value):
+        self._hue_bridge_username_value = value
+
+    @property
+    def hue_min_brightness(self):
+        return self._hue_min_brightness_value
+
+    @hue_min_brightness.setter
+    def hue_min_brightness(self, value):
+        self._hue_min_brightness_value = value
+
+    @property
+    def hue_max_brightness(self):
+        return self._hue_max_brightness_value
+
+    @hue_max_brightness.setter
+    def hue_max_brightness(self, value):
+        self._hue_max_brightness_value = value
+
     def save(self):
         """
         Saves the current configuration to a JSON file.
@@ -70,7 +106,11 @@ class ConfigValues:
         data = {
             'blur_factor': self._blur_factor_value,
             'num_windows': self._num_windows_value,
-            'brightness': self._brightness_value  # Add brightness to saved data
+            'brightness': self._brightness_value,
+            'hue_bridge_address': self._hue_bridge_address_value,
+            'hue_bridge_username': self._hue_bridge_username_value,
+            'hue_min_brightness': self._hue_min_brightness_value,
+            'hue_max_brightness': self._hue_max_brightness_value
         }
         with open(self._filename, "w") as json_file:
             json.dump(data, json_file)
@@ -82,4 +122,8 @@ class ConfigValues:
             data = json.load(json_file)
         self._blur_factor_value = data['blur_factor']
         self._num_windows_value = data['num_windows']
-        self._brightness_value = data.get('brightness', 50)  # Load with default fallback
+        self._brightness_value = data.get('brightness', 50)
+        self._hue_bridge_address_value = data.get('hue_bridge_address', '')
+        self._hue_bridge_username_value = data.get('hue_bridge_username', '')
+        self._hue_min_brightness_value = data.get('hue_min_brightness', 1)
+        self._hue_max_brightness_value = data.get('hue_max_brightness', 254)

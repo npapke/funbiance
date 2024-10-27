@@ -1,6 +1,7 @@
 from PySide6.QtCore import QObject, Slot, Qt
 from PySide6.QtWidgets import QApplication
 
+from ambiance_hue import AmbianceHue
 from ambiance_window import AmbianceWindow
 from capture_pipeline import CapturePipeline
 
@@ -29,7 +30,10 @@ class Ambiance(QObject):
                 self.capture.frame_sample.connect(w.on_next_pixmap, Qt.ConnectionType.QueuedConnection)
                 self.windows.append(w)
                 
-                break # TODO remove
+                # break # TODO remove
+            
+        self.hue = AmbianceHue(self._config)
+        self.capture.color_sample.connect(self.hue.set_color, Qt.ConnectionType.QueuedConnection)
                 
     @Slot()
     def on_stop(self):
