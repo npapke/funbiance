@@ -9,9 +9,10 @@ def main():
     app = QtWidgets.QApplication([b'Funbiance']) 
     config_values = ConfigValues()
     config_window = ConfigWindow(config_values)
+    config_window.show()
     ambiance = Ambiance(config_values)
-    config_window.start.connect(ambiance.on_start)
-    config_window.stop.connect(ambiance.on_stop)
+    config_window.start_requested.connect(ambiance.on_start)
+    config_window.stop_requested.connect(ambiance.on_stop)
     
     sys.exit(app.exec())
 
