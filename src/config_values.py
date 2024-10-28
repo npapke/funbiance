@@ -1,14 +1,24 @@
 import os
 import json
-
+from PySide6.QtCore import QObject, Property, Signal
 from appdirs import user_data_dir
 
+class ConfigValues(QObject):
+    # Define signals for property changes
+    blurFactorChanged = Signal(int)
+    numWindowsChanged = Signal(int)
+    brightnessChanged = Signal(int)
+    hueBridgeAddressChanged = Signal(str)
+    hueBridgeUsernameChanged = Signal(str)
+    hueMinBrightnessChanged = Signal(int)
+    hueMaxBrightnessChanged = Signal(int)
 
-class ConfigValues:
     def __init__(self):
+        super().__init__()
+        # Initialize private variables
         self._blur_factor_value = 50
         self._num_windows_value = 3
-        self._brightness_value = 50  # Add default brightness value
+        self._brightness_value = 50
         self._hue_bridge_address_value = ''
         self._hue_bridge_username_value = ''
         self._hue_min_brightness_value = 1
@@ -28,76 +38,103 @@ class ConfigValues:
         if os.path.isfile(self._filename):
             self.load()
 
-    @property
+    # Blur Factor
+    @Property(int, notify=blurFactorChanged)
     def blur_factor(self):
         return self._blur_factor_value
 
     @blur_factor.setter
     def blur_factor(self, value):
-        if not isinstance(value, int):
-            raise TypeError("Blur factor must be an integer")
-        elif not 0 <= value <= 100:
+        if not isinstance(value, (int, float)):
+            raise TypeError("Blur factor must be a number")
+        value = int(value)
+        if not 0 <= value <= 100:
             raise ValueError("Blur factor out of range (0-100)")
+        if self._blur_factor_value != value:
+            self._blur_factor_value = value
+            self.blurFactorChanged.emit(value)
 
-        self._blur_factor_value = value
-
-    @property
+    # Number of Windows
+    @Property(int, notify=numWindowsChanged)
     def num_windows(self):
         return self._num_windows_value
 
     @num_windows.setter
     def num_windows(self, value):
-        if not isinstance(value, int):
-            raise TypeError("Number of windows must be an integer")
-        elif not 0 <= value <= 6:
+        if not isinstance(value, (int, float)):
+            raise TypeError("Number of windows must be a number")
+        value = int(value)
+        if not 0 <= value <= 6:
             raise ValueError("Number of windows out of range (0-6)")
+        if self._num_windows_value != value:
+            self._num_windows_value = value
+            self.numWindowsChanged.emit(value)
 
-        self._num_windows_value = value
-
-    @property
+    # Brightness
+    @Property(int, notify=brightnessChanged)
     def brightness(self):
         return self._brightness_value
 
     @brightness.setter
     def brightness(self, value):
-        if not isinstance(value, int):
-            raise TypeError("Brightness must be an integer")
-        elif not 0 <= value <= 100:
+        if not isinstance(value, (int, float)):
+            raise TypeError("Brightness must be a number")
+        value = int(value)
+        if not 0 <= value <= 100:
             raise ValueError("Brightness out of range (0-100)")
+        if self._brightness_value != value:
+            self._brightness_value = value
+            self.brightnessChanged.emit(value)
 
-        self._brightness_value = value
-
-    @property
+    # Hue Bridge Address
+    @Property(str, notify=hueBridgeAddressChanged)
     def hue_bridge_address(self):
         return self._hue_bridge_address_value
 
     @hue_bridge_address.setter
     def hue_bridge_address(self, value):
-        self._hue_bridge_address_value = value
+        if self._hue_bridge_address_value != value:
+            self._hue_bridge_address_value = value
+            self.hueBridgeAddressChanged.emit(value)
 
-    @property
+    # Hue Bridge Username
+    @Property(str, notify=hueBridgeUsernameChanged)
     def hue_bridge_username(self):
         return self._hue_bridge_username_value
 
     @hue_bridge_username.setter
     def hue_bridge_username(self, value):
-        self._hue_bridge_username_value = value
+        if self._hue_bridge_username_value != value:
+            self._hue_bridge_username_value = value
+            self.hueBridgeUsernameChanged.emit(value)
 
-    @property
+    # Hue Min Brightness
+    @Property(int, notify=hueMinBrightnessChanged)
     def hue_min_brightness(self):
         return self._hue_min_brightness_value
 
     @hue_min_brightness.setter
     def hue_min_brightness(self, value):
-        self._hue_min_brightness_value = value
+        if not isinstance(value, (int, float)):
+            raise TypeError("Hue min brightness must be a number")
+        value = int(value)
+        if self._hue_min_brightness_value != value:
+            self._hue_min_brightness_value = value
+            self.hueMinBrightnessChanged.emit(value)
 
-    @property
+    # Hue Max Brightness
+    @Property(int, notify=hueMaxBrightnessChanged)
     def hue_max_brightness(self):
         return self._hue_max_brightness_value
 
     @hue_max_brightness.setter
     def hue_max_brightness(self, value):
-        self._hue_max_brightness_value = value
+        if not isinstance(value, (int, float)):
+            raise TypeError("Hue max brightness must be a number")
+        value = int(value)
+        if self._hue_max_brightness_value != value:
+            self._hue_max_brightness_value = value
+            self.hueMaxBrightnessChanged.emit(value)
 
     def save(self):
         """
@@ -114,16 +151,19 @@ class ConfigValues:
         }
         with open(self._filename, "w") as json_file:
             json.dump(data, json_file)
+
     def load(self):
         """
         Loads the previously saved configuration from a JSON file.
         """
         with open(self._filename, "r") as json_file:
             data = json.load(json_file)
-        self._blur_factor_value = data['blur_factor']
-        self._num_windows_value = data['num_windows']
-        self._brightness_value = data.get('brightness', 50)
-        self._hue_bridge_address_value = data.get('hue_bridge_address', '')
-        self._hue_bridge_username_value = data.get('hue_bridge_username', '')
-        self._hue_min_brightness_value = data.get('hue_min_brightness', 1)
-        self._hue_max_brightness_value = data.get('hue_max_brightness', 254)
+            
+        # Use property setters to ensure signals are emitted
+        self.blur_factor = data['blur_factor']
+        self.num_windows = data['num_windows']
+        self.brightness = data.get('brightness', 50)
+        self.hue_bridge_address = data.get('hue_bridge_address', '')
+        self.hue_bridge_username = data.get('hue_bridge_username', '')
+        self.hue_min_brightness = data.get('hue_min_brightness', 1)
+        self.hue_max_brightness = data.get('hue_max_brightness', 254)
