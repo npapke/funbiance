@@ -45,12 +45,10 @@ class AmbianceHue(QObject):
 
         atexit.register(restore_state)
 
-        self.min_brightness = max(self.HUE_MIN_BRIGHTNESS,
-                                  int(round(self._config.hue_min_brightness / 100 * self.HUE_MAX_BRIGHTNESS)))
-        self.max_brightness = min(self.HUE_MAX_BRIGHTNESS,
-                                  int(round(self._config.hue_max_brightness / 100 * self.HUE_MAX_BRIGHTNESS)))
         self.last_update_time = 0
-        self.min_update_interval = 1/5  # frames per second
+        
+        # Recommendation is to do no more than 10 REST calls per second.
+        self.min_update_interval = 1/10 * len(self._config.lights)  # frames per second
     
 
     @Slot(int, int, int)
@@ -62,9 +60,11 @@ class AmbianceHue(QObject):
 
         color = (r, g, b)
         if color != self.previous_color:
+            min_brightness = max(self.HUE_MIN_BRIGHTNESS, self._config.hue_min_brightness)
+            max_brightness = min(self.HUE_MAX_BRIGHTNESS, self._config.hue_max_brightness)
             state = {
                 'xy': self.rgb_to_xy(color),
-                'bri' : max(self.min_brightness, int(round(self.get_relative_luminance(color * self.max_brightness))))
+                'bri' : max(min_brightness, int(round(self.get_relative_luminance(color * max_brightness))))
             }
 
             for light in self._config.lights:
@@ -99,4 +99,5 @@ class AmbianceHue(QObject):
 
     def get_relative_luminance(self, color):
         return sum(x * y for x, y in zip(color, self.LUMINANCE_MULTIPLIERS)) / \
-            sum(x * y for x, y in zip((255, 255, 255), self.LUMINANCE_MULTIPLIERS))
+            1
+            # sum(x * y for x, y in zip((255, 255, 255), self.LUMINANCE_MULTIPLIERS))
