@@ -10,6 +10,7 @@ class ConfigValues(QObject):
     brightnessChanged = Signal(int)
     hueBridgeAddressChanged = Signal(str)
     hueBridgeUsernameChanged = Signal(str)
+    hueBridgeClientkeyChanged = Signal(str)
     hueMinBrightnessChanged = Signal(int)
     hueMaxBrightnessChanged = Signal(int)
 
@@ -21,6 +22,7 @@ class ConfigValues(QObject):
         self._brightness_value = 50
         self._hue_bridge_address_value = ''
         self._hue_bridge_username_value = ''
+        self._hue_bridge_clientkey_value = ''
         self._hue_min_brightness_value = 1
         self._hue_max_brightness_value = 254
 
@@ -108,6 +110,17 @@ class ConfigValues(QObject):
             self._hue_bridge_username_value = value
             self.hueBridgeUsernameChanged.emit(value)
 
+    # Hue Bridge Clientkey
+    @Property(str, notify=hueBridgeClientkeyChanged)
+    def hue_bridge_clientkey(self):
+        return self._hue_bridge_clientkey_value
+
+    @hue_bridge_clientkey.setter
+    def hue_bridge_clientkey(self, value):
+        if self._hue_bridge_clientkey_value != value:
+            self._hue_bridge_clientkey_value = value
+            self.hueBridgeClientkeyChanged.emit(value)
+
     # Hue Min Brightness
     @Property(int, notify=hueMinBrightnessChanged)
     def hue_min_brightness(self):
@@ -146,6 +159,7 @@ class ConfigValues(QObject):
             'brightness': self._brightness_value,
             'hue_bridge_address': self._hue_bridge_address_value,
             'hue_bridge_username': self._hue_bridge_username_value,
+            'hue_bridge_clientkey': self._hue_bridge_clientkey_value,
             'hue_min_brightness': self._hue_min_brightness_value,
             'hue_max_brightness': self._hue_max_brightness_value
         }
@@ -165,5 +179,6 @@ class ConfigValues(QObject):
         self.brightness = data.get('brightness', 50)
         self.hue_bridge_address = data.get('hue_bridge_address', '')
         self.hue_bridge_username = data.get('hue_bridge_username', '')
+        self.hue_bridge_clientkey = data.get('hue_bridge_clientkey', '')
         self.hue_min_brightness = data.get('hue_min_brightness', 1)
         self.hue_max_brightness = data.get('hue_max_brightness', 254)

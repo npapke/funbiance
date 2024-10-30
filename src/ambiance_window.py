@@ -8,7 +8,7 @@ from capture_pipeline import CapturePipeline
 
 class AmbianceWindow(QOpenGLWindow):
 
-    def __init__(self, screen: QScreen, *, capture: CapturePipeline=None, **kwd):
+    def __init__(self, screen: QScreen, *, capture: CapturePipeline=None, **kwd) -> None:
         super().__init__(QOpenGLWindow.UpdateBehavior.NoPartialUpdate, **kwd)
         self._pixmap = None
         self._capture = capture
@@ -31,13 +31,14 @@ class AmbianceWindow(QOpenGLWindow):
         # self.requestUpdate()  # Request initial render
         
         self.color_count = 0
+        
 
     @Slot(QPixmap)
-    def on_next_pixmap(self, pixmap):
+    def on_next_pixmap(self, pixmap) -> None:
         self._pixmap = pixmap
         self.update()
         
-    def paintEvent(self, event):
+    def paintEvent(self, event) -> None:
             
         try:
             painter = QPainter(self)
