@@ -6,7 +6,7 @@ from PySide6 import QtCore, QtWidgets, QtGui
 
 
 def main():
-    app = QtWidgets.QApplication([b'Funbiance']) 
+    app = QtWidgets.QApplication(['Funbiance']) 
     config_values = ConfigValues()
     config_window = ConfigWindow(config_values)
     config_window.show()

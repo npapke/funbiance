@@ -129,7 +129,7 @@ Window {
             id: bridgeAddressInput
             Layout.fillWidth: true
             text: configValues.hue_bridge_address
-            onTextChanged: configValues.bridge_address = text
+            onTextChanged: configValues.hue_bridge_address = text
         }
 
         // Bridge Username
@@ -141,7 +141,19 @@ Window {
             id: bridgeUsernameInput
             Layout.fillWidth: true
             text: configValues.hue_bridge_username
-            onTextChanged: configValues.bridge_username = text
+            onTextChanged: configValues.hue_bridge_username = text
+        }
+
+        // Bridge Clientkey
+        Label {
+            text: "Hue Bridge Clientkey"
+        }
+
+        TextField {
+            id: bridgeClientkeyInput
+            Layout.fillWidth: true
+            text: configValues.hue_bridge_clientkey
+            onTextChanged: configValues.hue_bridge_clientkey = text
         }
 
         // Hue Min Brightness
