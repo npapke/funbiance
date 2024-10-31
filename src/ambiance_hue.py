@@ -53,11 +53,6 @@ class AmbianceHue(QObject):
         self.streaming.set_color_space("xyb")
 
 
-        self.last_update_time = 0
-        
-        # Recommendation is 60 Hz
-        self.min_update_interval = 1/60
-        
     def __del__(self):
         if self.streaming:
             self.streaming.stop_stream()
@@ -137,10 +132,6 @@ class AmbianceHue(QObject):
 
     @Slot(int, int, int)
     def set_color(self, r: int, g: int, b: int) -> None:
-        current_time = time.time()
-        if current_time - self.last_update_time < self.min_update_interval:
-            return
-        self.last_update_time = current_time
 
         color = (r, g, b)
         xy = self.rgb_to_xy(color)

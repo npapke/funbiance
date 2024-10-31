@@ -28,7 +28,6 @@ class AmbianceWindow(QOpenGLWindow):
         self.setFlags(Qt.WindowType.WindowStaysOnTopHint)
         self.create()  # Ensure native window is created
         self.show()
-        # self.requestUpdate()  # Request initial render
         
         self.color_count = 0
         

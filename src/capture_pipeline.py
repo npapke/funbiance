@@ -17,6 +17,24 @@ gi.require_version('Gst', '1.0')
 from gi.repository import GObject, Gst
 
 class CapturePipeline(QObject):
+    """
+    Initializes and manages a GStreamer pipeline for screen capture using PipeWire and portal services.
+    
+    This class provides functionality to:
+    - Set up a DBus connection to the desktop portal
+    - Create a screen capture session
+    - Capture screen content using PipeWire
+    - Process captured frames to extract color information and apply visual effects
+    - Emit signals with processed frames and color data
+    
+    Signals:
+        color_sample (int, int, int): Emitted when a new RGB color sample is processed
+        frame_sample (QPixmap): Emitted when a new frame is processed
+        pipeline_active: Emitted when the GStreamer pipeline becomes active
+        
+    Args:
+        config_values (ConfigValues): Configuration object containing settings for frame processing
+    """
     
     color_sample = Signal(int, int, int)        # RGB
     frame_sample = Signal(QPixmap)
@@ -102,9 +120,11 @@ class CapturePipeline(QObject):
         
         pipecmd = (
                 f'pipewiresrc fd={fd} path={node_id} ! '
+                'videorate max-rate=30 ! '
                 'videoconvert ! ' 
-                'video/x-raw,format=RGB ! ' 
-                'appsink name=frame_sink emit-signals=True sync=False'
+                'videoscale ! '
+                'video/x-raw,format=RGB,width=640,height=320 ! ' 
+                'appsink name=frame_sink emit-signals=true max-buffers=3 drop=true'
             )
         # display=f'{vc} ! xvimagesink force-aspect-ratio=false'
         self.pipeline = Gst.parse_launch(pipecmd)
@@ -144,8 +164,8 @@ class CapturePipeline(QObject):
                 
                 # Once we have the mean color, let's perform some transformations.
                 scale_down = (1.0 - math.log(self._config.blur_factor + 1, 100)) if self._config.blur_factor < 99 else 0.001
-                width = int(width * scale_down)
-                height = int(height * scale_down)
+                width = max(int(width * scale_down), 10)
+                height = max(int(height * scale_down), 10)
 
                 numpy_frame = cv2.resize(numpy_frame, (width, height), interpolation = cv2.INTER_AREA)
                 numpy_frame = np.clip(numpy_frame * (self._config.brightness / 100.0), 0, 255).astype(np.uint8)
@@ -210,22 +230,3 @@ class CapturePipeline(QObject):
     def on_close_session_response(self, response):
         if response != 0:
             print("Failed to close session %s"%self.session)
-            
-            
-    def shader_code(self):
-        brightness = self._config.brightness / 100
-        return f"""
-#version 100
-#ifdef GL_ES
-precision mediump float;
-#endif
-varying vec2 v_texcoord;
-uniform sampler2D tex;
-uniform float time;
-uniform float width;
-uniform float height;
-
-void main () {{
-	gl_FragColor = texture2D( tex, v_texcoord ) * vec4({brightness}, {brightness}, {brightness}, {brightness});
-}}
-    """
