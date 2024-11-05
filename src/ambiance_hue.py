@@ -21,7 +21,7 @@ class AmbianceHue(QObject):
     
     def __init__(self, config_values: ConfigValues) -> None:
         super().__init__()
-        self._color_converter = rgbxy.Converter()
+        self._color_converter = rgbxy.Converter(rgbxy.GamutC)
         self._config = config_values
         
         bridge_params = self.make_bridge_params(config_values.hue_bridge_address, config_values.hue_bridge_username, config_values.hue_bridge_clientkey)
@@ -91,7 +91,7 @@ class AmbianceHue(QObject):
         if response.status_code == 200:
             # Parse JSON response
             data = response.json()
-            print(data)
+            # print(data)
             
             bridge_params["identification"] = data["data"][0]["id"]
             bridge_params["rid"] = data["data"][0]["owner"]["rid"]
@@ -106,7 +106,7 @@ class AmbianceHue(QObject):
         if response.status_code == 200:
             # Parse JSON response
             data = response.json()
-            print(data)
+            # print(data)
             
             bridge_params["swversion"] = int(data["swversion"])
             bridge_params["name"] = data["name"]
@@ -120,14 +120,14 @@ class AmbianceHue(QObject):
 
         # Check if request was successful
         if response.status_code == 200:
-            print(response.headers)
+            # print(response.headers)
             bridge_params["hue_app_id"] = response.headers["hue-application-id"]
             
         else:
             print(f"Request failed with status code: {response.status_code}")
             print(response.text)
             
-        print("Bridge params:", json.dumps(bridge_params, indent=4))
+        # print("Bridge params:", json.dumps(bridge_params, indent=4))
         return bridge_params
 
     @Slot(int, int, int)
