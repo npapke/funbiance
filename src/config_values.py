@@ -18,7 +18,6 @@ class ConfigValues(QObject):
         super().__init__()
         # Initialize private variables
         self._blur_factor_value = 50
-        self._num_windows_value = 3
         self._brightness_value = 50
         self._hue_bridge_address_value = ''
         self._hue_bridge_username_value = ''
@@ -55,22 +54,6 @@ class ConfigValues(QObject):
         if self._blur_factor_value != value:
             self._blur_factor_value = value
             self.blurFactorChanged.emit(value)
-
-    # Number of Windows
-    @Property(int, notify=numWindowsChanged)
-    def num_windows(self):
-        return self._num_windows_value
-
-    @num_windows.setter
-    def num_windows(self, value):
-        if not isinstance(value, (int, float)):
-            raise TypeError("Number of windows must be a number")
-        value = int(value)
-        if not 0 <= value <= 6:
-            raise ValueError("Number of windows out of range (0-6)")
-        if self._num_windows_value != value:
-            self._num_windows_value = value
-            self.numWindowsChanged.emit(value)
 
     # Brightness
     @Property(int, notify=brightnessChanged)
@@ -155,7 +138,6 @@ class ConfigValues(QObject):
         """
         data = {
             'blur_factor': self._blur_factor_value,
-            'num_windows': self._num_windows_value,
             'brightness': self._brightness_value,
             'hue_bridge_address': self._hue_bridge_address_value,
             'hue_bridge_username': self._hue_bridge_username_value,
@@ -175,7 +157,6 @@ class ConfigValues(QObject):
             
         # Use property setters to ensure signals are emitted
         self.blur_factor = data['blur_factor']
-        self.num_windows = data['num_windows']
         self.brightness = data.get('brightness', 50)
         self.hue_bridge_address = data.get('hue_bridge_address', '')
         self.hue_bridge_username = data.get('hue_bridge_username', '')

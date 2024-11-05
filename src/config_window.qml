@@ -88,38 +88,6 @@ Window {
             }
         }
 
-        // Number of Windows Controls
-        Label {
-            text: "Number of Windows (0-6)"
-        }
-
-        RowLayout {
-            Slider {
-                id: numWindowsSlider
-                Layout.fillWidth: true
-                from: 0
-                to: 6
-                stepSize: 1
-                value: configValues.num_windows
-                onValueChanged: {
-                    numWindowsInput.text = value
-                    configValues.num_windows = value
-                }
-            }
-
-            TextField {
-                id: numWindowsInput
-                Layout.preferredWidth: 50
-                text: numWindowsSlider.value
-                validator: IntValidator { bottom: 0; top: 6 }
-                onEditingFinished: {
-                    if (text >= 0 && text <= 6) {
-                        numWindowsSlider.value = parseInt(text)
-                    }
-                }
-            }
-        }
-
         // Bridge Address
         Label {
             text: "Hue Bridge Address"
