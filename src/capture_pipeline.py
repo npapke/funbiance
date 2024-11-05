@@ -8,6 +8,8 @@ import numpy as np
 from PySide6.QtCore import QObject, Signal, QThread
 from PySide6.QtGui import QImage, QPixmap
 import cv2
+import dominantcolors
+from sklearn.cluster import KMeans
 
 
 from config_values import ConfigValues
@@ -61,6 +63,7 @@ class CapturePipeline(QObject):
         self.session_token_counter = 0
         
         self._pixmap = None
+        self.centroids = "k-means++"
         
         
     def run(self):
@@ -120,10 +123,10 @@ class CapturePipeline(QObject):
         
         pipecmd = (
                 f'pipewiresrc fd={fd} path={node_id} ! '
-                'videorate max-rate=30 ! '
+                'videorate max-rate=10 ! '
                 'videoconvert ! ' 
                 'videoscale ! '
-                'video/x-raw,format=RGB,width=640,height=320 ! ' 
+                'video/x-raw,format=RGB,width=160,height=80 ! ' 
                 'appsink name=frame_sink emit-signals=true max-buffers=3 drop=true'
             )
         # display=f'{vc} ! xvimagesink force-aspect-ratio=false'
@@ -156,9 +159,14 @@ class CapturePipeline(QObject):
                 )
                 
                 # Calculate average RGB values across all pixels
-                r = int(np.mean(numpy_frame[:,:,0]))
-                g = int(np.mean(numpy_frame[:,:,1])) 
-                b = int(np.mean(numpy_frame[:,:,2]))
+                # r = int(np.mean(numpy_frame[:,:,0]))
+                # g = int(np.mean(numpy_frame[:,:,1])) 
+                # b = int(np.mean(numpy_frame[:,:,2]))
+                dominant_colors = dominantcolors.find_dominant_colors(numpy_frame, 3)
+                (r,g,b) = dominant_colors[0]
+                # kmeans = KMeans(n_clusters=4, init=self.centroids).fit(numpy_frame.reshape(-1,3))
+                # self.centroids = kmeans.cluster_centers_.astype("uint8")
+                # (r,g,b) = tuple(self.centroids[0])
                 self.color_sample.emit(r, g, b)
                 # print(f"r={r} g={g} b={b}")
                 
@@ -189,6 +197,7 @@ class CapturePipeline(QObject):
                 return Gst.FlowReturn.OK
         except Exception as e:
             print(f"capture_pipeline: exception {e}")
+            return Gst.FlowReturn.OK
         
         return Gst.FlowReturn.ERROR
     
