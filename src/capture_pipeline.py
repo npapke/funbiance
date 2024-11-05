@@ -159,11 +159,11 @@ class CapturePipeline(QObject):
                 )
                 
                 # Calculate average RGB values across all pixels
-                # r = int(np.mean(numpy_frame[:,:,0]))
-                # g = int(np.mean(numpy_frame[:,:,1])) 
-                # b = int(np.mean(numpy_frame[:,:,2]))
-                dominant_colors = dominantcolors.find_dominant_colors(numpy_frame, 3)
-                (r,g,b) = dominant_colors[0]
+                r = int(np.mean(numpy_frame[:,:,0]))
+                g = int(np.mean(numpy_frame[:,:,1])) 
+                b = int(np.mean(numpy_frame[:,:,2]))
+                # dominant_colors = dominantcolors.find_dominant_colors(numpy_frame, 3)
+                # (r,g,b) = dominant_colors[0]
                 # kmeans = KMeans(n_clusters=4, init=self.centroids).fit(numpy_frame.reshape(-1,3))
                 # self.centroids = kmeans.cluster_centers_.astype("uint8")
                 # (r,g,b) = tuple(self.centroids[0])

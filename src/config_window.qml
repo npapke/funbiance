@@ -188,6 +188,38 @@ Window {
             }
         }
 
+        // Hue Max Brightness
+        Label {
+            text: "Hue Color Saturation"
+        }
+
+        RowLayout {
+            Slider {
+                id: hueSaturationSlider
+                Layout.fillWidth: true
+                from: 0.0
+                to: 2.0
+                stepSize: 0.1
+                value: configValues.hue_saturation
+                onValueChanged: {
+                    hueSaturationInput.text = value.toFixed(1)
+                    configValues.hue_saturation = value
+                }
+            }
+
+            TextField {
+                id: hueSaturationInput
+                Layout.preferredWidth: 50
+                text: hueSaturationSlider.value
+                validator: DoubleValidator { bottom: 0.0; top: 2.0 }
+                onEditingFinished: {
+                    if (text >= 0.0 && text <= 2.0) {
+                        hueMaxBrightnessSlider.value = parseFloat(text)
+                    }
+                }
+            }
+        }
+
         // Buttons
         RowLayout {
             Layout.fillWidth: true

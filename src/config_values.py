@@ -6,13 +6,13 @@ from appdirs import user_data_dir
 class ConfigValues(QObject):
     # Define signals for property changes
     blurFactorChanged = Signal(int)
-    numWindowsChanged = Signal(int)
     brightnessChanged = Signal(int)
     hueBridgeAddressChanged = Signal(str)
     hueBridgeUsernameChanged = Signal(str)
     hueBridgeClientkeyChanged = Signal(str)
     hueMinBrightnessChanged = Signal(int)
     hueMaxBrightnessChanged = Signal(int)
+    hueSaturationChanged = Signal(int)
 
     def __init__(self):
         super().__init__()
@@ -24,6 +24,7 @@ class ConfigValues(QObject):
         self._hue_bridge_clientkey_value = ''
         self._hue_min_brightness_value = 1
         self._hue_max_brightness_value = 254
+        self._hue_saturation_value = 1.0
 
         # Get the appropriate XDG directory for storing user data
         dir_path = user_data_dir("Funbiance", roaming=True)
@@ -132,6 +133,20 @@ class ConfigValues(QObject):
             self._hue_max_brightness_value = value
             self.hueMaxBrightnessChanged.emit(value)
 
+    # Hue Color Saturation
+    @Property(int, notify=hueSaturationChanged)
+    def hue_saturation(self):
+        return self._hue_saturation_value
+
+    @hue_saturation.setter
+    def hue_saturation(self, value):
+        if not isinstance(value, (int, float)):
+            raise TypeError("Hue max brightness must be a number")
+        value = float(value)
+        if self._hue_saturation_value != value:
+            self._hue_saturation_value = value
+            self.hueSaturationChanged.emit(value)
+
     def save(self):
         """
         Saves the current configuration to a JSON file.
@@ -143,7 +158,8 @@ class ConfigValues(QObject):
             'hue_bridge_username': self._hue_bridge_username_value,
             'hue_bridge_clientkey': self._hue_bridge_clientkey_value,
             'hue_min_brightness': self._hue_min_brightness_value,
-            'hue_max_brightness': self._hue_max_brightness_value
+            'hue_max_brightness': self._hue_max_brightness_value,
+            'hue_saturation': self._hue_saturation_value
         }
         with open(self._filename, "w") as json_file:
             json.dump(data, json_file)
@@ -163,3 +179,4 @@ class ConfigValues(QObject):
         self.hue_bridge_clientkey = data.get('hue_bridge_clientkey', '')
         self.hue_min_brightness = data.get('hue_min_brightness', 1)
         self.hue_max_brightness = data.get('hue_max_brightness', 254)
+        self.hue_saturation = data.get('hue_saturation', 1.0)

@@ -6,6 +6,8 @@ import json
 import requests
 import urllib3
 from hue_entertainment_pykit import create_bridge, Entertainment, Streaming, Bridge
+import cv2
+import numpy as np
 
 from config_values import ConfigValues
 
@@ -132,6 +134,9 @@ class AmbianceHue(QObject):
 
     @Slot(int, int, int)
     def set_color(self, r: int, g: int, b: int) -> None:
+        
+        h, s, v = cv_rgb_to_hsv(r, g, b)
+        r, g, b = cv_hsv_to_rgb(h, min(int(s * self._config.hue_saturation), 255), v)
 
         color = (r, g, b)
         xy = self.rgb_to_xy(color)
@@ -152,3 +157,16 @@ class AmbianceHue(QObject):
 
     def get_luminance(self, color):
         return sum(x * y for x, y in zip(color, self.LUMINANCE_MULTIPLIERS)) / 255.0
+    
+    
+# Convert RGB to HSV using OpenCV
+def cv_rgb_to_hsv(r, g, b):
+    rgb_color = np.uint8([[[r, g, b]]])
+    hsv_color = cv2.cvtColor(rgb_color, cv2.COLOR_RGB2HSV)
+    return tuple(hsv_color[0][0])
+
+# Convert HSV to RGB using OpenCV
+def cv_hsv_to_rgb(h, s, v):
+    hsv_color = np.uint8([[[h, s, v]]])
+    rgb_color = cv2.cvtColor(hsv_color, cv2.COLOR_HSV2RGB)
+    return tuple(rgb_color[0][0])

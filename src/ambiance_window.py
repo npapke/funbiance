@@ -52,7 +52,9 @@ class AmbianceWindow(QOpenGLWindow):
                 pixmap = self._pixmap if not self._capture else self._capture._pixmap
                 if pixmap:
                     painter.drawPixmap(0, 0, self.width(), self.height(), pixmap)
-                    painter.fillRect(self.width() / 3, self.height()/ 3 * 2, self.width() / 3, self.height() / 4, self.dominant_color)
+                    
+                    # Debug swatch for Hue
+                    # painter.fillRect(self.width() / 3, self.height()/ 3 * 2, self.width() / 3, self.height() / 4, self.dominant_color)
                 else:
                     painter.fillRect(0, 0, self.width(), self.height(), QColor.fromRgb(self.color_count, self.color_count, self.color_count))
                     self.color_count = (self.color_count + 1) % 255  # animate for debug
