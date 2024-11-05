@@ -28,6 +28,7 @@ class Ambiance(QObject):
                 print(f"Avail Geometry: {screen.availableGeometry()}")
                 w = AmbianceWindow(screen)
                 self.capture.frame_sample.connect(w.on_next_pixmap, Qt.ConnectionType.QueuedConnection)
+                self.capture.color_sample.connect(w.set_color, Qt.ConnectionType.QueuedConnection)
                 self.windows.append(w)
                 
                 # break # TODO remove

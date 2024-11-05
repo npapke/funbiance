@@ -30,12 +30,17 @@ class AmbianceWindow(QOpenGLWindow):
         self.show()
         
         self.color_count = 0
+        self.dominant_color = QColor.fromRgb(0,0,0)
         
 
     @Slot(QPixmap)
     def on_next_pixmap(self, pixmap) -> None:
         self._pixmap = pixmap
         self.update()
+        
+    @Slot(int, int, int)
+    def set_color(self, r: int, g: int, b: int) -> None:
+        self.dominant_color = QColor.fromRgb(r, g, b)
         
     def paintEvent(self, event) -> None:
             
@@ -47,6 +52,7 @@ class AmbianceWindow(QOpenGLWindow):
                 pixmap = self._pixmap if not self._capture else self._capture._pixmap
                 if pixmap:
                     painter.drawPixmap(0, 0, self.width(), self.height(), pixmap)
+                    painter.fillRect(self.width() / 3, self.height()/ 3 * 2, self.width() / 3, self.height() / 4, self.dominant_color)
                 else:
                     painter.fillRect(0, 0, self.width(), self.height(), QColor.fromRgb(self.color_count, self.color_count, self.color_count))
                     self.color_count = (self.color_count + 1) % 255  # animate for debug
