@@ -19,7 +19,7 @@ class ConfigWindow(QObject):
         self.engine.rootContext().setContextProperty("configValues", self._config)
         
         # Load QML file
-        self.engine.load("src/config_window.qml")
+        self.engine.load("funbiance/config_window.qml")
         
         if self.engine.rootObjects():
             self.window = self.engine.rootObjects()[0]
