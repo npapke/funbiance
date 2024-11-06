@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QImage, QPixmap, QPaintDevice, QBackingStore, QSurfaceFormat, QColor, QScreen
 from PySide6.QtOpenGL import QOpenGLFramebufferObject, QOpenGLWindow
 
-from capture_pipeline import CapturePipeline
+from .capture_pipeline import CapturePipeline
 
 class AmbianceWindow(QOpenGLWindow):
 

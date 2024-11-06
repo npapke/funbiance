@@ -1,9 +1,9 @@
 from PySide6.QtCore import QObject, Slot, Qt
 from PySide6.QtWidgets import QApplication
 
-from ambiance_hue import AmbianceHue
-from ambiance_window import AmbianceWindow
-from capture_pipeline import CapturePipeline
+from .ambiance_hue import AmbianceHue
+from .ambiance_window import AmbianceWindow
+from .capture_pipeline import CapturePipeline
 
 class Ambiance(QObject):
     

@@ -1,7 +1,4 @@
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QSlider, QLabel, 
-                              QHBoxLayout, QPushButton, QLineEdit)
-from PySide6.QtCore import Qt, Signal, QObject, QCoreApplication
-from PySide6.QtGui import QIntValidator
+from PySide6.QtCore import Signal, QObject
 from PySide6.QtQml import QQmlApplicationEngine
 
 

@@ -1,6 +1,5 @@
 
 import re
-import signal
 import dbus
 import math
 from dbus.mainloop.glib import DBusGMainLoop
@@ -12,7 +11,7 @@ import dominantcolors
 from sklearn.cluster import KMeans
 
 
-from config_values import ConfigValues
+from .config_values import ConfigValues
 
 import gi
 gi.require_version('Gst', '1.0')
@@ -42,9 +41,9 @@ class CapturePipeline(QObject):
     frame_sample = Signal(QPixmap)
     pipeline_active = Signal()
     
-    def __init__(self, config_values):
+    def __init__(self, config_values: ConfigValues):
         super().__init__()
-        self._config = config_values
+        self._config: ConfigValues = config_values
 
         DBusGMainLoop(set_as_default=True)
         Gst.init(None)
@@ -123,7 +122,7 @@ class CapturePipeline(QObject):
         
         pipecmd = (
                 f'pipewiresrc fd={fd} path={node_id} ! '
-                'videorate max-rate=10 ! '
+                'videorate max-rate=20 ! '
                 'videoconvert ! ' 
                 'videoscale ! '
                 'video/x-raw,format=RGB,width=160,height=80 ! ' 

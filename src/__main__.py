@@ -1,7 +1,7 @@
 import sys
-from ambiance import Ambiance
-from config_values import ConfigValues
-from config_window import ConfigWindow
+from .ambiance import Ambiance
+from .config_values import ConfigValues
+from .config_window import ConfigWindow
 from PySide6 import QtCore, QtWidgets, QtGui
 
 

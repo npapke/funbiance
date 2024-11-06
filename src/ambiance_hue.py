@@ -9,7 +9,7 @@ from hue_entertainment_pykit import create_bridge, Entertainment, Streaming, Bri
 import cv2
 import numpy as np
 
-from config_values import ConfigValues
+from .config_values import ConfigValues
 
 
 class AmbianceHue(QObject):
