@@ -6,6 +6,11 @@ with open('requirements.txt') as f:
 
 setup(
     name="funbiance",
+    author="Norbert Papke",
+    author_email="npapke@acm.org",
+    description="Light ambiance using monitors and Philips Hue",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     version="0.1",
     packages=find_packages(),
     install_requires=requirements,
