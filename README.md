@@ -18,11 +18,13 @@ Funbiance enhances your entertainment experience by creating dynamic ambient lig
 
 ## Installation
 
-Currently only available as source code. To install:
+Currently only available as source code. To install and run:
 
 ```bash
 git clone https://github.com/npapke/funbiance.git
 cd funbiance
+pip install -r requirements.txt
+python -m funbiance
 ```
 
 ## Usage
@@ -30,6 +32,17 @@ Documentation coming soon
 
 ## Development Status
 This project is under active development. Features and APIs may change frequently. Currently provided as source code only with no release artifacts.
+
+### Major outstanding issues
+There is no way to enrol a Hue bridge from the application.  Enrollment has to be done manually.
+See [Jupyter Notebook](doc/streaming_experiment.ipynb) for an example of how do this.
+
+Selection of the Hue Entertainment Area is not yet implemented.  It is hardcoded.  See [ambiance_hue.py](funbiance/ambiance_hue.py).
+
+### Future Enhancements
+All lights in the entertainment area are currently driven to the same color.  This should be changed so that each light has its own color
+based on screen region.
+
 
 ## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
