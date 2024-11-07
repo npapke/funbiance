@@ -1,5 +1,6 @@
 from PySide6.QtCore import Signal, QObject
 from PySide6.QtQml import QQmlApplicationEngine
+from .config_values import ConfigValues
 
 
 class ConfigWindow(QObject):
@@ -8,9 +9,9 @@ class ConfigWindow(QObject):
     stop_requested = Signal()
  
     
-    def __init__(self, config_values):
+    def __init__(self, config_values: ConfigValues):
         super().__init__()
-        self._config = config_values
+        self._config: ConfigValues = config_values
         
         self.engine = QQmlApplicationEngine()
         print(self.engine.importPathList())

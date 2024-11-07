@@ -214,7 +214,7 @@ Window {
                 validator: DoubleValidator { bottom: 0.0; top: 2.0 }
                 onEditingFinished: {
                     if (text >= 0.0 && text <= 2.0) {
-                        hueMaxBrightnessSlider.value = parseFloat(text)
+                        hueSaturationSlider.value = parseFloat(text)
                     }
                 }
             }
@@ -234,7 +234,10 @@ Window {
             Button {
                 text: "Run"
                 Layout.fillWidth: true
-                onClicked: configWindow.startClicked()
+                onClicked: {
+                    enabled = false
+                    configWindow.startClicked()
+                }
             }
 
             Button {

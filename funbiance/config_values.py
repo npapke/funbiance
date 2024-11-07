@@ -134,12 +134,12 @@ class ConfigValues(QObject):
             self.hueMaxBrightnessChanged.emit(value)
 
     # Hue Color Saturation
-    @Property(int, notify=hueSaturationChanged)
-    def hue_saturation(self):
+    @Property(float, notify=hueSaturationChanged)
+    def hue_saturation(self) -> float:
         return self._hue_saturation_value
 
     @hue_saturation.setter
-    def hue_saturation(self, value):
+    def hue_saturation(self, value: float):
         if not isinstance(value, (int, float)):
             raise TypeError("Hue max brightness must be a number")
         value = float(value)
