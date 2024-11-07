@@ -243,7 +243,10 @@ Window {
             Button {
                 text: "Stop"
                 Layout.fillWidth: true
-                onClicked: configWindow.stopClicked()
+                onClicked: {
+                    configWindow.stopClicked()
+                    Qt.quit()
+                }
             }
         }
 
