@@ -80,11 +80,8 @@ class CapturePipeline(QObject):
         if self.pipeline is not None:
             self.pipeline.set_state(Gst.State.NULL)
             self.pipeline = None
-
-        # TODO Find a way to close the session.  The following does not work.
-        # if hasattr(self, 'session') and self.session:
-            # self.portal.Close(dbus_interface=self.session_iface)
-            # self.screen_cast_call(self.portal.Close, self.on_close_session_response)
+            
+        self.bus.close()
 
     def new_request_path(self):
         self.request_token_counter = self.request_token_counter + 1
