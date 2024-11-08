@@ -40,7 +40,7 @@ There is no way to enrol a Hue bridge from the application.  Enrollment has to b
 See [Jupyter Notebook](doc/streaming_experiment.ipynb) for an example of how do this.
 
 Selection of the Hue Entertainment Area is not yet implemented.  Entertainment area must be specified by the index.
-Details are in the Jupyter ntoebook as well.
+Details are in the Jupyter notebook as well.
 
 ### Future Enhancements
 All lights in the entertainment area are currently driven to the same color.  This should be changed so that each light has its own color
