@@ -40,8 +40,7 @@ class AmbianceHue(QObject):
                 print(f"\tchannel: {channel.channel_id} position={channel.position}")
 
         # TODO: Add some Entertainment Area selection logic
-        # For the purposes of example I'm going to do manual selection
-        self.entertainment_config = list(entertainment_configs.values())[1]
+        self.entertainment_config = list(entertainment_configs.values())[self._config.hue_entertainment_area]
 
         # Set up the Streaming service
         self.streaming = Streaming(

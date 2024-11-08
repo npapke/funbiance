@@ -10,9 +10,10 @@ class ConfigValues(QObject):
     hueBridgeAddressChanged = Signal(str)
     hueBridgeUsernameChanged = Signal(str)
     hueBridgeClientkeyChanged = Signal(str)
+    hueEntertainmentAreaChanged = Signal(int)
     hueMinBrightnessChanged = Signal(int)
     hueMaxBrightnessChanged = Signal(int)
-    hueSaturationChanged = Signal(int)
+    hueSaturationChanged = Signal(float)
 
     def __init__(self):
         super().__init__()
@@ -22,6 +23,7 @@ class ConfigValues(QObject):
         self._hue_bridge_address_value = ''
         self._hue_bridge_username_value = ''
         self._hue_bridge_clientkey_value = ''
+        self._hue_entertainment_area_value = 0
         self._hue_min_brightness_value = 1
         self._hue_max_brightness_value = 254
         self._hue_saturation_value = 1.0
@@ -105,6 +107,17 @@ class ConfigValues(QObject):
             self._hue_bridge_clientkey_value = value
             self.hueBridgeClientkeyChanged.emit(value)
 
+    # Hue Bridge Entertainment Area Index
+    @Property(int, notify=hueEntertainmentAreaChanged)
+    def hue_entertainment_area(self):
+        return self._hue_entertainment_area_value
+
+    @hue_entertainment_area.setter
+    def hue_entertainment_area(self, value):
+        if self._hue_entertainment_area_value  != value:
+            self._hue_entertainment_area_value = value
+            self.hueEntertainmentAreaChanged.emit(value)
+
     # Hue Min Brightness
     @Property(int, notify=hueMinBrightnessChanged)
     def hue_min_brightness(self):
@@ -157,6 +170,7 @@ class ConfigValues(QObject):
             'hue_bridge_address': self._hue_bridge_address_value,
             'hue_bridge_username': self._hue_bridge_username_value,
             'hue_bridge_clientkey': self._hue_bridge_clientkey_value,
+            'hue_entertainment_area': self._hue_entertainment_area_value,
             'hue_min_brightness': self._hue_min_brightness_value,
             'hue_max_brightness': self._hue_max_brightness_value,
             'hue_saturation': self._hue_saturation_value
@@ -177,6 +191,7 @@ class ConfigValues(QObject):
         self.hue_bridge_address = data.get('hue_bridge_address', '')
         self.hue_bridge_username = data.get('hue_bridge_username', '')
         self.hue_bridge_clientkey = data.get('hue_bridge_clientkey', '')
+        self.hue_entertainment_area = data.get('hue_entertainment_area', '')
         self.hue_min_brightness = data.get('hue_min_brightness', 1)
         self.hue_max_brightness = data.get('hue_max_brightness', 254)
         self.hue_saturation = data.get('hue_saturation', 1.0)

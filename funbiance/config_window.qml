@@ -5,7 +5,7 @@ import QtQuick.Layouts
 Window {
     id: configWindow
     width: 300
-    height: 600
+    height: 650
     title: "Funbiance Config Window"
     visible: true
 
@@ -122,6 +122,18 @@ Window {
             Layout.fillWidth: true
             text: configValues.hue_bridge_clientkey
             onTextChanged: configValues.hue_bridge_clientkey = text
+        }
+
+        // Hue Entertainment Area Index
+        Label {
+            text: "Hue Entertainment Area (0, 1, 2, ...)"
+        }
+
+        TextField {
+            id: hueEntertainmentAreaInput
+            Layout.fillWidth: true
+            text: configValues.hue_entertainment_area
+            onTextChanged: configValues.hue_entertainment_area = parseInt(text)
         }
 
         // Hue Min Brightness

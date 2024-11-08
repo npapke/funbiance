@@ -27,6 +27,8 @@ pip install -r requirements.txt
 python -m funbiance
 ```
 
+Note: Recommend doing the above in a Python venv or conda env to avoid conflicts with your system Python installation.
+
 ## Usage
 Documentation coming soon
 
@@ -37,7 +39,8 @@ This project is under active development. Features and APIs may change frequentl
 There is no way to enrol a Hue bridge from the application.  Enrollment has to be done manually.
 See [Jupyter Notebook](doc/streaming_experiment.ipynb) for an example of how do this.
 
-Selection of the Hue Entertainment Area is not yet implemented.  It is hardcoded.  See [ambiance_hue.py](funbiance/ambiance_hue.py).
+Selection of the Hue Entertainment Area is not yet implemented.  Entertainment area must be specified by the index.
+Details are in the Jupyter ntoebook as well.
 
 ### Future Enhancements
 All lights in the entertainment area are currently driven to the same color.  This should be changed so that each light has its own color
