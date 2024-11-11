@@ -1,6 +1,6 @@
 {
     "python.analysis.extraPaths": [
-        "./src"
+        "./funbiance"
     ],
     "python.analysis.autoImportCompletions": true,
     "vim.overrideCopy": false,
