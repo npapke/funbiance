@@ -9,6 +9,13 @@
             "module": "funbiance",
             "cwd": "${workspaceFolder}",
             "justMyCode": true
+        },
+        {
+            "name": "Python: Jupyter",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "purpose": ["debug-test", "debug-in-terminal"]
         }
     ],
     "env": {
