@@ -9,6 +9,7 @@ from PySide6.QtGui import QImage, QPixmap
 import cv2
 import dominantcolors
 from sklearn.cluster import KMeans
+import logging
 
 
 from .config_values import ConfigValues
@@ -16,6 +17,8 @@ from .config_values import ConfigValues
 import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import GObject, Gst
+
+logger = logging.getLogger(__name__)
 
 class CapturePipeline(QObject):
     """
@@ -122,7 +125,7 @@ class CapturePipeline(QObject):
                 'videorate max-rate=20 ! '
                 'videoconvert ! ' 
                 'videoscale ! '
-                'video/x-raw,format=RGB,width=160,height=80 ! ' 
+                'video/x-raw,format=RGB,width=32,height=32 ! ' 
                 'appsink name=frame_sink emit-signals=true max-buffers=3 drop=true'
             )
         # display=f'{vc} ! xvimagesink force-aspect-ratio=false'
@@ -132,10 +135,13 @@ class CapturePipeline(QObject):
         self.pipeline.set_state(Gst.State.PLAYING)
         self.pipeline.get_bus().connect('message', self.on_gst_message)
         
+        logger.info('Pipeline created')
+        
         self.pipeline_active.emit()
         
         
     def on_buffer(self, sink, data):
+        logger.debug('have a frame')
         sample = sink.emit("pull-sample")
         try:
             if sample:
@@ -167,7 +173,7 @@ class CapturePipeline(QObject):
                 # print(f"r={r} g={g} b={b}")
                 
                 # Once we have the mean color, let's perform some transformations.
-                scale_down = (1.0 - math.log(self._config.blur_factor + 1, 100)) if self._config.blur_factor < 99 else 0.001
+                scale_down = (1.0 - math.log(self._config.blur_factor + 1, 100)) if self._config.blur_factor < 98 else 0.001
                 width = max(int(width * scale_down), 10)
                 height = max(int(height * scale_down), 10)
 
@@ -175,6 +181,9 @@ class CapturePipeline(QObject):
                 numpy_frame = np.clip(numpy_frame * (self._config.brightness / 100.0), 0, 255).astype(np.uint8)
                 numpy_frame = cv2.GaussianBlur(numpy_frame, (15, 15), 8)
                 numpy_frame = cv2.flip(numpy_frame, 1)
+                
+                # Ensure the array is contiguous in memory
+                numpy_frame = np.ascontiguousarray(numpy_frame)
                 
                 # Convert numpy array to QImage
                 height, width, channels = numpy_frame.shape
@@ -192,25 +201,24 @@ class CapturePipeline(QObject):
                 
                 return Gst.FlowReturn.OK
         except Exception as e:
-            print(f"capture_pipeline: exception {e}")
+            logger.error(f"capture_pipeline: exception {e}")
             return Gst.FlowReturn.OK
         
         return Gst.FlowReturn.ERROR
     
     def on_start_response(self, response, results):
         if response != 0:
-            print("Failed to start: %s"%response)
+            logger.error(f"Failed to start: {response}")
             self.terminate()
             return
 
-        print("streams:")
         for (node_id, stream_properties) in results['streams']:
-            print("stream {}".format(node_id))
+            logger.info(f"stream {node_id}")
             self.play_pipewire_stream(node_id)
 
     def on_select_sources_response(self, response, results):
         if response != 0:
-            print("Failed to select sources: %d"%response)
+            logger.error(f"Failed to select sources: {response}")
             self.terminate()
             return
 
@@ -220,12 +228,12 @@ class CapturePipeline(QObject):
 
     def on_create_session_response(self, response, results):
         if response != 0:
-            print("Failed to create session: %d"%response)
+            logger.error(f"Failed to create session: {response}")
             self.terminate()
             return
 
         self.session = results['session_handle']
-        print("session %s created"%self.session)
+        logger.debug(f"session {self.session} created")
 
         self.screen_cast_call(self.portal.SelectSources, self.on_select_sources_response,
                         self.session,
@@ -234,4 +242,4 @@ class CapturePipeline(QObject):
         
     def on_close_session_response(self, response):
         if response != 0:
-            print("Failed to close session %s"%self.session)
+            logger.error(f"Failed to close session {self.session}")

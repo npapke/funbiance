@@ -8,9 +8,11 @@ import urllib3
 from hue_entertainment_pykit import create_bridge, Entertainment, Streaming, Bridge
 import cv2
 import numpy as np
+import logging
 
 from .config_values import ConfigValues
 
+logger = logging.getLogger(__name__)
 
 class AmbianceHue(QObject):
     
@@ -35,9 +37,9 @@ class AmbianceHue(QObject):
         # Fetch all Entertainment Configurations on the Hue bridge
         entertainment_configs = entertainment_service.get_entertainment_configs()
         for id in entertainment_configs:
-            print(f"Entertainment configurations: {id} = {entertainment_configs[id].name}")
+            logger.info(f"Entertainment configurations: {id} = {entertainment_configs[id].name}")
             for channel in entertainment_configs[id].channels:
-                print(f"\tchannel: {channel.channel_id} position={channel.position}")
+                logger.info(f"\tchannel: {channel.channel_id} position={channel.position}")
 
         # TODO: Add some Entertainment Area selection logic
         self.entertainment_config = list(entertainment_configs.values())[self._config.hue_entertainment_area]
@@ -113,8 +115,8 @@ class AmbianceHue(QObject):
             bridge_params["name"] = data["name"]
             
         else:
-            print(f"Request failed with status code: {response.status_code}")
-            print(response.text)
+            logger.warning(f"Request failed with status code: {response.status_code}")
+            logger.warning(response.text)
             
             
         response: requests.Response = requests.get(f"https://{bridge_address}/auth/v1", headers=headers, verify=False)
@@ -125,8 +127,8 @@ class AmbianceHue(QObject):
             bridge_params["hue_app_id"] = response.headers["hue-application-id"]
             
         else:
-            print(f"Request failed with status code: {response.status_code}")
-            print(response.text)
+            logger.warning(f"Request failed with status code: {response.status_code}")
+            logger.warning(response.text)
             
         # print("Bridge params:", json.dumps(bridge_params, indent=4))
         return bridge_params

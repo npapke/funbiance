@@ -3,8 +3,11 @@ from PySide6.QtGui import QPainter, QWindow, QSurface, QOpenGLContext
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QImage, QPixmap, QPaintDevice, QBackingStore, QSurfaceFormat, QColor, QScreen
 from PySide6.QtOpenGL import QOpenGLFramebufferObject, QOpenGLWindow
+import logging
 
 from .capture_pipeline import CapturePipeline
+
+logger = logging.getLogger(__name__)
 
 class AmbianceWindow(QOpenGLWindow):
 
@@ -17,7 +20,7 @@ class AmbianceWindow(QOpenGLWindow):
         
         # Create the window with proper geometry
         geometry = screen.geometry()
-        print(f"geometry: {geometry}")
+        logger.info(f"geometry: {geometry}")
         self.setGeometry(geometry)
         
         surfaceFormat = QSurfaceFormat()
@@ -63,4 +66,4 @@ class AmbianceWindow(QOpenGLWindow):
                 painter.end()
                 
         except Exception as e:
-            print(f"Render error: {e}")
+            logger.warning(f"Render error: {e}")

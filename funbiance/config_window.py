@@ -1,7 +1,9 @@
 from PySide6.QtCore import Signal, QObject
 from PySide6.QtQml import QQmlApplicationEngine
 from .config_values import ConfigValues
+import logging
 
+logger = logging.getLogger(__name__)
 
 class ConfigWindow(QObject):
     
@@ -14,7 +16,7 @@ class ConfigWindow(QObject):
         self._config: ConfigValues = config_values
         
         self.engine = QQmlApplicationEngine()
-        print(self.engine.importPathList())
+        logger.info(self.engine.importPathList())
     
         # Create and expose ConfigValues to QML
         self.engine.rootContext().setContextProperty("configValues", self._config)
@@ -32,7 +34,7 @@ class ConfigWindow(QObject):
             self.window.show()
         else:
             self.window = None
-            print("Unable to create ConfigWindow")
+            logger.warning("Unable to create ConfigWindow")
             
     def show(self):
         if self.window:
