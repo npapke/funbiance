@@ -126,7 +126,7 @@ class CapturePipeline(QObject):
                 'videoconvert ! ' 
                 'videoscale ! '
                 'video/x-raw,format=RGB,width=32,height=32 ! ' 
-                'appsink name=frame_sink emit-signals=true max-buffers=3 drop=true'
+                'appsink name=frame_sink emit-signals=true max-buffers=1 drop=true'
             )
         # display=f'{vc} ! xvimagesink force-aspect-ratio=false'
         self.pipeline = Gst.parse_launch(pipecmd)
@@ -198,8 +198,10 @@ class CapturePipeline(QObject):
                 
                 self._pixmap = QPixmap.fromImage(qimage)
                 self.frame_sample.emit(self._pixmap)
+            else:
+                logger.info("No sample")
                 
-                return Gst.FlowReturn.OK
+            return Gst.FlowReturn.OK
         except Exception as e:
             logger.error(f"capture_pipeline: exception {e}")
             return Gst.FlowReturn.OK
