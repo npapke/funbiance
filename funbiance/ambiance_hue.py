@@ -1,8 +1,6 @@
 from PySide6.QtCore import Slot, QObject
 import rgbxy
-import time
 import socket
-import json
 import requests
 import urllib3
 from hue_entertainment_pykit import create_bridge, Entertainment, Streaming, Bridge

@@ -1,9 +1,12 @@
 from PySide6.QtCore import QObject, Slot, Qt
 from PySide6.QtWidgets import QApplication
+import logging
 
 from .ambiance_hue import AmbianceHue
 from .ambiance_window import AmbianceWindow
 from .capture_pipeline import CapturePipeline
+
+logger = logging.getLogger(__name__)
 
 class Ambiance(QObject):
     
@@ -25,26 +28,23 @@ class Ambiance(QObject):
         app = QApplication.instance()
         for screen in app.screens():
             if screen != app.primaryScreen():
-                print(f"Avail Geometry: {screen.availableGeometry()}")
+                logger.info(f"Avail Geometry: {screen.availableGeometry()}")
                 w = AmbianceWindow(screen)
                 self.capture.frame_sample.connect(w.on_next_pixmap, Qt.ConnectionType.QueuedConnection)
                 self.capture.color_sample.connect(w.set_color, Qt.ConnectionType.QueuedConnection)
                 self.windows.append(w)
                 
-                # break # TODO remove
-            
         self.hue = AmbianceHue(self._config)
         self.capture.color_sample.connect(self.hue.set_color, Qt.ConnectionType.QueuedConnection)
                 
     @Slot()
     def on_stop(self):
+        for w in self.windows:
+            w.close()
+            del w
+        self.windows = []
+        
         if self.capture is not None:
-            
-            for w in self.windows:
-                w.close()
-                del w
-            self.windows = []
-            
             self.capture.terminate()
             del self.capture
             self.capture = None

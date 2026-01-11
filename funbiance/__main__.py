@@ -6,9 +6,17 @@ from PySide6 import QtCore, QtWidgets, QtGui
 import logging
 
 
+class SpamFilter(logging.Filter):
+    def filter(self, record):
+        # Filter out the color setting spam from the hue library
+        if "Setting color" in record.getMessage() and record.name == "root":
+            return False
+        return True
+
+
 def main():
     logging.basicConfig(
-        level=logging.WARNING,
+        level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
             logging.StreamHandler(sys.stdout),  # Console output
@@ -16,8 +24,8 @@ def main():
         ]
     ) 
     
-    logging.getLogger('funbiance.capture_pipeline').setLevel(logging.INFO)
-    
+    # Add spam filter to root logger
+    logging.getLogger().addFilter(SpamFilter())
     logger = logging.getLogger(__name__)
     logger.info('Starting funbiance')
     
