@@ -1,7 +1,7 @@
-from PySide6.QtCore import QRect, Slot, Qt, QEvent, QThread
+from PySide6.QtCore import QRect, Slot, Qt, QEvent, QThread, QTime
 from PySide6.QtGui import QPainter, QWindow, QSurface, QOpenGLContext
 from PySide6.QtWidgets import QApplication
-from PySide6.QtGui import QImage, QPixmap, QPaintDevice, QBackingStore, QSurfaceFormat, QColor, QScreen
+from PySide6.QtGui import QImage, QPixmap, QPaintDevice, QBackingStore, QSurfaceFormat, QColor, QScreen, QFont
 from PySide6.QtOpenGL import QOpenGLFramebufferObject, QOpenGLWindow
 import logging
 
@@ -68,6 +68,22 @@ class AmbianceWindow(QOpenGLWindow):
                     painter.fillRect(0, 0, self.width(), self.height(), QColor.fromRgb(self.color_count, self.color_count, self.color_count))
                     self.color_count = (self.color_count + 1) % 255  # animate for debug
                 
+                # Draw current time in corner
+                current_time = QTime.currentTime().toString("hh:mm:ss")
+                painter.setPen(QColor.fromRgb(255, 255, 255))  # White text
+                font = QFont("Monospace", 24)
+                font.setStyleHint(QFont.StyleHint.Monospace)
+                painter.setFont(font)
+                
+                # Draw in bottom-right corner with some padding
+                text_rect = painter.fontMetrics().boundingRect(current_time)
+                padding = 20
+                painter.drawText(
+                    self.width() - text_rect.width() - padding,
+                    self.height() - text_rect.height() - padding,
+                    current_time
+                )
+
             finally:
                 painter.end()
                 
