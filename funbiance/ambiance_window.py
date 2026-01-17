@@ -17,8 +17,6 @@ class AmbianceWindow(QOpenGLWindow):
         self._capture = capture
         
         self.setScreen(screen)
-        
-        # Create the window with proper geometry
         geometry = screen.geometry()
         logger.info(f"geometry: {geometry}")
         self.setGeometry(geometry)
@@ -27,11 +25,19 @@ class AmbianceWindow(QOpenGLWindow):
         surfaceFormat.setSwapInterval(1)
         self.setFormat(surfaceFormat)
         
-        # Make sure window is visible and on top
-        self.setFlags(Qt.WindowType.WindowStaysOnTopHint)
+        # self.setFlags(Qt.WindowType.WindowStaysOnTopHint ) #| Qt.WindowType.FramelessWindowHint)
+        # self.setFlags(Qt.WindowType.MaximizeUsingFullscreenGeometryHint ) #| Qt.WindowType.FramelessWindowHint)
+
         self.create()  # Ensure native window is created
-        self.show()
+        self.showFullScreen()
+        # self.show()
         
+        # Force the window to the correct screen (workaround for KDE issues)
+        if self.screen() != screen:
+            logger.warning(f"Window on wrong screen, moving from {self.screen().name()} to {screen.name()}")
+            self.setScreen(screen)
+            self.setGeometry(screen.geometry())
+
         self.color_count = 0
         self.dominant_color = QColor.fromRgb(0,0,0)
         
