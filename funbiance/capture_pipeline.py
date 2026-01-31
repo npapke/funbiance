@@ -2,6 +2,7 @@
 import re
 import dbus
 import math
+import time
 from dbus.mainloop.glib import DBusGMainLoop
 import numpy as np
 from PySide6.QtCore import QObject, Signal, QThread
@@ -66,6 +67,7 @@ class CapturePipeline(QObject):
         
         self._pixmap = None
         self.centroids = "k-means++"
+        self._last_sample_time = None
         
         
     def run(self):
@@ -122,18 +124,21 @@ class CapturePipeline(QObject):
         
         pipecmd = (
                 f'pipewiresrc fd={fd} path={node_id} ! '
-                'videorate max-rate=20 ! '
+                'videorate max-rate=5 ! '
                 'videoconvert ! ' 
-                'videoscale ! '
-                'video/x-raw,format=RGB,width=32,height=32 ! ' 
-                'appsink name=frame_sink emit-signals=true max-buffers=1 drop=true'
+                'videoscale method=0 ! '
+                'video/x-raw,format=RGB,width=64,height=64 ! ' 
+                'appsink name=frame_sink emit-signals=true max-buffers=2 drop=true sync=false'
             )
         # display=f'{vc} ! xvimagesink force-aspect-ratio=false'
         self.pipeline = Gst.parse_launch(pipecmd)
         appsink = self.pipeline.get_by_name('frame_sink')
         appsink.connect("new-sample", self.on_buffer, None)
         self.pipeline.set_state(Gst.State.PLAYING)
-        self.pipeline.get_bus().connect('message', self.on_gst_message)
+
+        bus = self.pipeline.get_bus()
+        bus.add_signal_watch()
+        bus.connect('message', self.on_gst_message)
         
         logger.info('Pipeline created')
         
@@ -142,11 +147,24 @@ class CapturePipeline(QObject):
         
     def on_buffer(self, sink, data):
         logger.debug('have a frame')
-        sample = sink.emit("pull-sample")
         try:
+            sample = sink.emit("pull-sample")
+            current_time = time.time()
             if sample:
+                # Check if more than 1 second has elapsed since last sample
+                if self._last_sample_time is not None:
+                    elapsed = current_time - self._last_sample_time
+                    if elapsed > 1.0:
+                        logger.info(f"No sample received in {elapsed:.2f} seconds")
+                
+                self._last_sample_time = current_time
+                
                 buffer = sample.get_buffer()
                 caps = sample.get_caps()
+                if not buffer or not caps:
+                    logger.warning("Invalid sample: missing buffer or caps")
+                    return Gst.FlowReturn.OK
+
                 
                 # Get buffer dimensions
                 width = caps.get_structure(0).get_value('width')
@@ -176,14 +194,14 @@ class CapturePipeline(QObject):
                 scale_down = (1.0 - math.log(self._config.blur_factor + 1, 100)) if self._config.blur_factor < 98 else 0.001
                 width = max(int(width * scale_down), 10)
                 height = max(int(height * scale_down), 10)
+                
+                brightness_multiplier = self._config.brightness / 100.0
+                if brightness_multiplier != 1.0:
+                    numpy_frame = (numpy_frame.astype(np.float32) * brightness_multiplier).clip(0, 255).astype(np.uint8)
 
                 numpy_frame = cv2.resize(numpy_frame, (width, height), interpolation = cv2.INTER_AREA)
-                numpy_frame = np.clip(numpy_frame * (self._config.brightness / 100.0), 0, 255).astype(np.uint8)
                 numpy_frame = cv2.GaussianBlur(numpy_frame, (15, 15), 8)
                 numpy_frame = cv2.flip(numpy_frame, 1)
-                
-                # Ensure the array is contiguous in memory
-                numpy_frame = np.ascontiguousarray(numpy_frame)
                 
                 # Convert numpy array to QImage
                 height, width, channels = numpy_frame.shape

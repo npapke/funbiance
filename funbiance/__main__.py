@@ -27,6 +27,7 @@ def main():
     # Add spam filter to root logger
     logging.getLogger().addFilter(SpamFilter())
     logger = logging.getLogger(__name__)
+    logger.info('========================================================================================')
     logger.info('Starting funbiance')
     
     app = QtWidgets.QApplication(['Funbiance']) 
