@@ -58,9 +58,8 @@ class AmbianceWindow(QOpenGLWindow):
 
             try:
                 painter.setRenderHints(QPainter.RenderHint.SmoothPixmapTransform | QPainter.RenderHint.Antialiasing)
-                pixmap = self._pixmap if not self._capture else self._capture._pixmap
-                if pixmap:
-                    painter.drawPixmap(0, 0, self.width(), self.height(), pixmap)
+                if self._pixmap:
+                    painter.drawPixmap(0, 0, self.width(), self.height(), self._pixmap)
                     
                     # Debug swatch for Hue
                     # painter.fillRect(self.width() / 3, self.height()/ 3 * 2, self.width() / 3, self.height() / 4, self.dominant_color)
