@@ -50,7 +50,7 @@ class CapturePipeline(QObject):
         self._config: ConfigValues = config_values
 
         DBusGMainLoop(set_as_default=True)
-        Gst.init(None)
+        Gst.init([])
 
         self.bus = dbus.SessionBus()
         self.request_iface = 'org.freedesktop.portal.Request'
